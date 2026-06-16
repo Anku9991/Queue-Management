@@ -8,10 +8,28 @@ const StaffDashboard = () => {
   const { tokens, callNext, updateStatus, updatePriority } = useQueueStore();
   const [activeCounter, setActiveCounter] = useState('Counter 1');
 
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
   const handleCallNext = async () => {
-    const nextToken = await callNext(activeCounter);
-    if (!nextToken) {
-      alert('No more patients waiting in the queue!');
+    try {
+      setErrorMsg(null);
+      const nextToken = await callNext(activeCounter);
+      if (!nextToken) {
+        alert('No more patients waiting in the queue!');
+      }
+    } catch (err: any) {
+      console.error(err);
+      setErrorMsg(err.message || 'Failed to call next patient. Check permissions.');
+    }
+  };
+
+  const handleStatusUpdate = async (tokenId: string, status: QueueStatus) => {
+    try {
+      setErrorMsg(null);
+      await updateStatus(tokenId, status);
+    } catch (err: any) {
+      console.error(err);
+      setErrorMsg(err.message || 'Failed to update status.');
     }
   };
 
@@ -40,6 +58,18 @@ const StaffDashboard = () => {
 
   return (
     <div className="space-y-6">
+      {errorMsg && (
+        <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <AlertTriangle className="h-5 w-5 text-red-400" />
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-red-700 font-medium">Error: {errorMsg}</p>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-2xl font-bold text-slate-900">Staff Dashboard</h1>
         <div className="flex items-center space-x-4">
@@ -75,14 +105,14 @@ const StaffDashboard = () => {
             </div>
             <div className="flex space-x-3">
               <button
-                onClick={() => updateStatus(currentToken.tokenId, 'completed')}
-                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-green-600 hover:bg-green-700"
+                onClick={() => handleStatusUpdate(currentToken.tokenId, 'completed')}
+                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-green-600 hover:bg-green-700 transition-colors"
               >
                 <CheckCircle className="mr-2 h-4 w-4" /> Complete
               </button>
               <button
-                onClick={() => updateStatus(currentToken.tokenId, 'skipped')}
-                className="inline-flex items-center px-4 py-2 border border-slate-300 shadow-sm text-sm font-medium rounded-lg text-slate-700 bg-white hover:bg-slate-50"
+                onClick={() => handleStatusUpdate(currentToken.tokenId, 'skipped')}
+                className="inline-flex items-center px-4 py-2 border border-slate-300 shadow-sm text-sm font-medium rounded-lg text-slate-700 bg-white hover:bg-slate-50 transition-colors"
               >
                 <SkipForward className="mr-2 h-4 w-4" /> Skip
               </button>
@@ -129,7 +159,7 @@ const StaffDashboard = () => {
                     <div className="flex justify-end space-x-2">
                       {token.status === 'skipped' && (
                         <button
-                          onClick={() => updateStatus(token.tokenId, 'waiting')}
+                          onClick={() => handleStatusUpdate(token.tokenId, 'waiting')}
                           className="text-primary-600 hover:text-primary-900 inline-flex items-center"
                           title="Recall to Queue"
                         >
@@ -138,7 +168,7 @@ const StaffDashboard = () => {
                       )}
                       {token.status === 'waiting' && (
                         <button
-                          onClick={() => updateStatus(token.tokenId, 'cancelled')}
+                          onClick={() => handleStatusUpdate(token.tokenId, 'cancelled')}
                           className="text-red-600 hover:text-red-900 inline-flex items-center"
                           title="Cancel Token"
                         >
