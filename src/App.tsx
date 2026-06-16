@@ -9,7 +9,6 @@ import AdminDashboard from './pages/AdminDashboard';
 import QRPoster from './pages/QRPoster';
 import LoginPage from './pages/LoginPage';
 import Layout from './components/Layout';
-import DemoNavigation from './components/DemoNavigation';
 
 function App() {
   const initListeners = useQueueStore(state => state.initListeners);
@@ -36,7 +35,6 @@ function App() {
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-      <DemoNavigation />
     </Router>
   );
 }
