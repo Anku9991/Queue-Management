@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQueueStore } from '../store/useQueueStore';
 import { Clock, Users, ArrowLeft, CheckCircle } from 'lucide-react';
@@ -8,20 +8,14 @@ import { format } from 'date-fns';
 const PatientTracker = () => {
   const { id } = useParams(); // this is the tokenId
   const { tokens, settings } = useQueueStore();
-  const [peopleAhead, setPeopleAhead] = useState(0);
 
   const today = new Date().toDateString();
   const todayTokens = tokens.filter(t => new Date(t.timestamp).toDateString() === today);
   const token = todayTokens.find(t => t.tokenId === id);
 
-  useEffect(() => {
-    if (token && token.status === 'waiting') {
-      const ahead = todayTokens.filter(t => t.status === 'waiting' && t.timestamp < token.timestamp).length;
-      setPeopleAhead(ahead);
-    } else {
-      setPeopleAhead(0);
-    }
-  }, [token, todayTokens]);
+  const peopleAhead = token && token.status === 'waiting' 
+    ? todayTokens.filter(t => t.status === 'waiting' && t.timestamp < token.timestamp).length 
+    : 0;
 
   if (!token) {
     return (

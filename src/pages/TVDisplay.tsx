@@ -56,7 +56,7 @@ const TVDisplay = () => {
       window.speechSynthesis.speak(englishMsg);
       window.speechSynthesis.speak(hindiMsg);
     }
-  }, [servingTokens.length, soundEnabled]);
+  }, [servingTokens.map(t => t.id).join(','), soundEnabled]);
 
   return (
     <div className="min-h-screen bg-slate-900 text-white flex flex-col font-sans overflow-hidden">
