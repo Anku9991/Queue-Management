@@ -5,6 +5,8 @@ import { Volume2, VolumeX, Clock } from 'lucide-react';
 
 const TVDisplay = () => {
   const { tokens, settings } = useQueueStore();
+  const today = new Date().toDateString();
+  const todayTokens = tokens.filter(t => new Date(t.timestamp).toDateString() === today);
   const [time, setTime] = useState(new Date());
   const [soundEnabled, setSoundEnabled] = useState(false);
 
@@ -13,8 +15,8 @@ const TVDisplay = () => {
     return () => clearInterval(timer);
   }, []);
 
-  const servingTokens = tokens.filter(t => t.status === 'in-process');
-  const waitingTokens = tokens
+  const servingTokens = todayTokens.filter(t => t.status === 'in-process');
+  const waitingTokens = todayTokens
     .filter(t => t.status === 'waiting')
     .sort((a, b) => {
       const priorityWeight: Record<string, number> = { vip: 5, emergency: 4, pregnant: 3, senior: 2, disabled: 1, normal: 0 };

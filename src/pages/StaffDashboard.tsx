@@ -7,8 +7,8 @@ import type { QueueStatus, PriorityLevel } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const StaffDashboard = () => {
-  const { tokens, callNext, updateStatus, updatePriority } = useQueueStore();
-  const [activeCounter, setActiveCounter] = useState('Counter 1');
+  const { tokens, settings, callNext, updateStatus, updatePriority } = useQueueStore();
+  const [activeCounter, setActiveCounter] = useState(settings?.counters?.[0] || 'Counter 1');
 
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -56,7 +56,10 @@ const StaffDashboard = () => {
     );
   };
 
-  const currentToken = tokens.find(t => t.status === 'in-process' && t.servedBy === activeCounter);
+  const today = new Date().toDateString();
+  const todayTokens = tokens.filter(t => new Date(t.timestamp).toDateString() === today);
+
+  const currentToken = todayTokens.find(t => t.status === 'in-process' && t.servedBy === activeCounter);
 
   return (
     <div className="space-y-6">
@@ -80,9 +83,9 @@ const StaffDashboard = () => {
             onChange={(e) => setActiveCounter(e.target.value)}
             className="block w-full pl-4 pr-10 py-2.5 text-sm font-medium border-none focus:ring-0 text-slate-700 bg-transparent cursor-pointer"
           >
-            <option>Counter 1</option>
-            <option>Counter 2</option>
-            <option>Counter 3</option>
+            {settings?.counters?.map((counter: string) => (
+              <option key={counter} value={counter}>{counter}</option>
+            ))}
           </select>
           <button
             onClick={handleCallNext}
@@ -150,7 +153,7 @@ const StaffDashboard = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-slate-200">
-              {tokens.slice().reverse().map((token) => (
+              {todayTokens.slice().reverse().map((token) => (
                 <tr key={token.id} className="hover:bg-slate-50 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className="text-sm font-bold text-slate-900">{token.tokenId}</span>
@@ -202,7 +205,7 @@ const StaffDashboard = () => {
                   </td>
                 </tr>
               ))}
-              {tokens.length === 0 && (
+              {todayTokens.length === 0 && (
                 <tr>
                   <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
                     No patients in the queue today.

@@ -20,4 +20,6 @@ export interface Settings {
   hospitalName: string;
   prefix: string;
   resetTime: string; // e.g., "00:00"
+  counters: string[];
+  staffList: Array<{ id: string; name: string; role: string; email: string }>;
 }

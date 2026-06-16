@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import type { Token, QueueStatus, PriorityLevel, Settings } from '../types';
 import { db, isFirebaseConfigured } from '../lib/firebase';
-import { collection, doc, setDoc, updateDoc, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { collection, doc, setDoc, updateDoc, onSnapshot, query, orderBy, where } from 'firebase/firestore';
 
 interface QueueState {
   tokens: Token[];
@@ -23,14 +23,23 @@ export const useQueueStore = create<QueueState>((set, get) => ({
   settings: {
     hospitalName: 'Smart Queue Management',
     prefix: 'A-',
-    resetTime: '00:00'
+    resetTime: '00:00',
+    counters: ['Counter 1', 'Counter 2', 'Counter 3'],
+    staffList: []
   },
 
   initListeners: () => {
     if (!isFirebaseConfigured || !db) return;
 
-    // Listen to tokens
-    const q = query(collection(db, 'tokens'), orderBy('timestamp', 'asc'));
+    // Listen to tokens (Only fetch today's tokens to avoid loading old data)
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const q = query(
+      collection(db, 'tokens'), 
+      where('timestamp', '>=', startOfDay.getTime()),
+      orderBy('timestamp', 'asc')
+    );
     onSnapshot(q, (snapshot) => {
       const liveTokens: Token[] = [];
       snapshot.forEach((doc) => liveTokens.push(doc.data() as Token));

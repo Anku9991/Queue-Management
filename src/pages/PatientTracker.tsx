@@ -10,16 +10,18 @@ const PatientTracker = () => {
   const { tokens, settings } = useQueueStore();
   const [peopleAhead, setPeopleAhead] = useState(0);
 
-  const token = tokens.find(t => t.tokenId === id);
+  const today = new Date().toDateString();
+  const todayTokens = tokens.filter(t => new Date(t.timestamp).toDateString() === today);
+  const token = todayTokens.find(t => t.tokenId === id);
 
   useEffect(() => {
     if (token && token.status === 'waiting') {
-      const ahead = tokens.filter(t => t.status === 'waiting' && t.timestamp < token.timestamp).length;
+      const ahead = todayTokens.filter(t => t.status === 'waiting' && t.timestamp < token.timestamp).length;
       setPeopleAhead(ahead);
     } else {
       setPeopleAhead(0);
     }
-  }, [tokens, token]);
+  }, [token, todayTokens]);
 
   if (!token) {
     return (
