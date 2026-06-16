@@ -4,6 +4,19 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Users, Clock, CheckCircle, SkipForward } from 'lucide-react';
 import { format } from 'date-fns';
 
+const StatCard = ({ title, value, icon: Icon, colorClass, gradient }: any) => (
+  <div className={`relative overflow-hidden bg-white rounded-3xl shadow-sm border border-slate-100 p-6 flex items-center transition-transform hover:scale-[1.02]`}>
+    <div className={`absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full opacity-20 blur-2xl pointer-events-none ${gradient}`}></div>
+    <div className={`p-4 rounded-2xl shadow-inner relative z-10 ${colorClass}`}>
+      <Icon className="h-8 w-8 text-white" />
+    </div>
+    <div className="ml-6 relative z-10">
+      <p className="text-sm font-semibold text-slate-500 uppercase tracking-wider">{title}</p>
+      <h3 className="text-4xl font-black text-slate-900 tracking-tight mt-1">{value}</h3>
+    </div>
+  </div>
+);
+
 const AdminDashboard = () => {
   const { tokens, settings, updateSettings } = useQueueStore();
   const [activeTab, setActiveTab] = useState('overview');
@@ -62,19 +75,6 @@ const AdminDashboard = () => {
     await updateSettings(localSettings);
     alert('Settings saved successfully!');
   };
-
-  const StatCard = ({ title, value, icon: Icon, colorClass, gradient }: any) => (
-    <div className={`relative overflow-hidden bg-white rounded-3xl shadow-sm border border-slate-100 p-6 flex items-center transition-transform hover:scale-[1.02]`}>
-      <div className={`absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full opacity-20 blur-2xl pointer-events-none ${gradient}`}></div>
-      <div className={`p-4 rounded-2xl shadow-inner relative z-10 ${colorClass}`}>
-        <Icon className="h-8 w-8 text-white" />
-      </div>
-      <div className="ml-6 relative z-10">
-        <p className="text-sm font-semibold text-slate-500 uppercase tracking-wider">{title}</p>
-        <h3 className="text-4xl font-black text-slate-900 tracking-tight mt-1">{value}</h3>
-      </div>
-    </div>
-  );
 
   return (
     <div className="space-y-8">
