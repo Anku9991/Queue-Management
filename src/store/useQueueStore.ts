@@ -72,9 +72,9 @@ export const useQueueStore = create<QueueState>((set, get) => ({
     return newToken;
   },
 
-  updateStatus: async (tokenId, status, servedBy) => {
+  updateStatus: async (id, status, servedBy) => {
     const { tokens } = get();
-    const token = tokens.find(t => t.tokenId === tokenId);
+    const token = tokens.find(t => t.id === id);
     if (!token) return;
 
     if (isFirebaseConfigured && db) {
@@ -84,7 +84,7 @@ export const useQueueStore = create<QueueState>((set, get) => ({
     } else {
       set((state) => ({
         tokens: state.tokens.map(t => 
-          t.tokenId === tokenId 
+          t.id === id 
             ? { ...t, status, ...(servedBy ? { servedBy } : {}) } 
             : t
         )
@@ -92,16 +92,16 @@ export const useQueueStore = create<QueueState>((set, get) => ({
     }
   },
 
-  updatePriority: async (tokenId, priority) => {
+  updatePriority: async (id, priority) => {
     const { tokens } = get();
-    const token = tokens.find(t => t.tokenId === tokenId);
+    const token = tokens.find(t => t.id === id);
     if (!token) return;
 
     if (isFirebaseConfigured && db) {
       await updateDoc(doc(db, 'tokens', token.id), { priority });
     } else {
       set((state) => ({
-        tokens: state.tokens.map(t => t.tokenId === tokenId ? { ...t, priority } : t)
+        tokens: state.tokens.map(t => t.id === id ? { ...t, priority } : t)
       }));
     }
   },
@@ -124,7 +124,7 @@ export const useQueueStore = create<QueueState>((set, get) => ({
     if (waitingTokens.length === 0) return null;
 
     const nextToken = waitingTokens[0];
-    await updateStatus(nextToken.tokenId, 'in-process', counterName);
+    await updateStatus(nextToken.id, 'in-process', counterName);
     return nextToken;
   },
 

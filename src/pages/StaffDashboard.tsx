@@ -25,10 +25,10 @@ const StaffDashboard = () => {
     }
   };
 
-  const handleStatusUpdate = async (tokenId: string, status: QueueStatus) => {
+  const handleStatusUpdate = async (id: string, status: QueueStatus) => {
     try {
       setErrorMsg(null);
-      await updateStatus(tokenId, status);
+      await updateStatus(id, status);
     } catch (err: any) {
       console.error(err);
       setErrorMsg(err.message || 'Failed to update status.');
@@ -117,13 +117,13 @@ const StaffDashboard = () => {
               </div>
               <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 w-full sm:w-auto">
                 <button
-                  onClick={() => handleStatusUpdate(currentToken.tokenId, 'completed')}
+                  onClick={() => handleStatusUpdate(currentToken.id, 'completed')}
                   className="w-full sm:w-auto inline-flex justify-center items-center px-6 py-3 border border-transparent shadow-lg text-sm font-bold rounded-xl text-emerald-900 bg-emerald-400 hover:bg-emerald-300 transition-colors"
                 >
                   <CheckCircle className="mr-2 h-5 w-5" /> Complete
                 </button>
                 <button
-                  onClick={() => handleStatusUpdate(currentToken.tokenId, 'skipped')}
+                  onClick={() => handleStatusUpdate(currentToken.id, 'skipped')}
                   className="w-full sm:w-auto inline-flex justify-center items-center px-6 py-3 border border-white/20 shadow-lg text-sm font-bold rounded-xl text-white bg-white/10 hover:bg-white/20 backdrop-blur-sm transition-colors"
                 >
                   <SkipForward className="mr-2 h-5 w-5" /> Skip
@@ -172,7 +172,7 @@ const StaffDashboard = () => {
                     <div className="flex justify-end space-x-2">
                       {token.status === 'skipped' && (
                         <button
-                          onClick={() => handleStatusUpdate(token.tokenId, 'waiting')}
+                          onClick={() => handleStatusUpdate(token.id, 'waiting')}
                           className="text-primary-600 hover:text-primary-900 inline-flex items-center"
                           title="Recall to Queue"
                         >
@@ -181,7 +181,7 @@ const StaffDashboard = () => {
                       )}
                       {token.status === 'waiting' && (
                         <button
-                          onClick={() => handleStatusUpdate(token.tokenId, 'cancelled')}
+                          onClick={() => handleStatusUpdate(token.id, 'cancelled')}
                           className="text-red-600 hover:text-red-900 inline-flex items-center"
                           title="Cancel Token"
                         >
@@ -190,7 +190,7 @@ const StaffDashboard = () => {
                       )}
                       <select
                         value={token.priority}
-                        onChange={(e) => updatePriority(token.tokenId, e.target.value as PriorityLevel)}
+                        onChange={(e) => updatePriority(token.id, e.target.value as PriorityLevel)}
                         className="text-xs border-slate-300 rounded ml-2 focus:ring-primary-500 focus:border-primary-500 border"
                       >
                         <option value="normal">Normal</option>
