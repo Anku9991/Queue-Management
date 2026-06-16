@@ -90,7 +90,7 @@ const PatientLanding = () => {
                   value={formData.patientName}
                   onChange={(e) => setFormData({...formData, patientName: e.target.value})}
                   className="focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 sm:text-sm border-slate-300 rounded-xl py-3 border"
-                  placeholder="John Doe"
+                  placeholder="Rahul Sharma"
                 />
               </div>
             </div>
@@ -111,7 +111,7 @@ const PatientLanding = () => {
                   value={formData.mobile}
                   onChange={(e) => setFormData({...formData, mobile: e.target.value})}
                   className="focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 sm:text-sm border-slate-300 rounded-xl py-3 border"
-                  placeholder="+1 (555) 000-0000"
+                  placeholder="+91 9876543210"
                 />
               </div>
             </div>
