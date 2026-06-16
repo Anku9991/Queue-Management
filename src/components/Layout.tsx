@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Outlet, Link, useLocation, Navigate } from 'react-router-dom';
-import { Activity, Users, Settings as SettingsIcon, MonitorPlay, LogOut } from 'lucide-react';
+import { Activity, Users, MonitorPlay, LogOut } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useQueueStore } from '../store/useQueueStore';
 import { auth, isFirebaseConfigured } from '../lib/firebase';
-import { onAuthStateChanged, signOut, User } from 'firebase/auth';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
+import type { User } from 'firebase/auth';
 
 const Layout = () => {
   const location = useLocation();

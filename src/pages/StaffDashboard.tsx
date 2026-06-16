@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQueueStore } from '../store/useQueueStore';
 import { Play, SkipForward, CheckCircle, XCircle, RotateCcw, AlertTriangle } from 'lucide-react';
 import { format } from 'date-fns';
-import type { QueueStatus, PriorityLevel, Token } from '../types';
+import type { QueueStatus, PriorityLevel } from '../types';
 
 const StaffDashboard = () => {
   const { tokens, callNext, updateStatus, updatePriority } = useQueueStore();
@@ -13,14 +13,6 @@ const StaffDashboard = () => {
     if (!nextToken) {
       alert('No more patients waiting in the queue!');
     }
-  };
-
-  const handleComplete = async (tokenId: string) => {
-    await updateStatus(tokenId, 'completed');
-  };
-
-  const handleSkip = async (tokenId: string) => {
-    await updateStatus(tokenId, 'skipped');
   };
 
   const getStatusBadge = (status: QueueStatus) => {

@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import type { Token, QueueStatus, PriorityLevel, Settings } from '../types';
 import { db, isFirebaseConfigured } from '../lib/firebase';
-import { collection, doc, setDoc, updateDoc, onSnapshot, query, orderBy, getDocs, runTransaction } from 'firebase/firestore';
+import { collection, doc, setDoc, updateDoc, onSnapshot, query, orderBy } from 'firebase/firestore';
 
 interface QueueState {
   tokens: Token[];
