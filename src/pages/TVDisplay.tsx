@@ -26,6 +26,8 @@ const TVDisplay = () => {
       return a.timestamp - b.timestamp;
     });
 
+  const servingTokenIds = servingTokens.map(t => t.id).join(',');
+
   // Play sound when new token is called
   useEffect(() => {
     if (soundEnabled && servingTokens.length > 0) {
@@ -56,7 +58,8 @@ const TVDisplay = () => {
       window.speechSynthesis.speak(englishMsg);
       window.speechSynthesis.speak(hindiMsg);
     }
-  }, [servingTokens.map(t => t.id).join(','), soundEnabled]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [servingTokenIds, soundEnabled]);
 
   return (
     <div className="min-h-screen bg-slate-900 text-white flex flex-col font-sans overflow-hidden">
