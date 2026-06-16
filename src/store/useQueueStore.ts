@@ -21,7 +21,7 @@ const generateId = () => Math.random().toString(36).substring(2, 9);
 export const useQueueStore = create<QueueState>((set, get) => ({
   tokens: [],
   settings: {
-    hospitalName: 'Medanta Enterprise',
+    hospitalName: 'Smart Queue Management',
     prefix: 'A-',
     resetTime: '00:00'
   },

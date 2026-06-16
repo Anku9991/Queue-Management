@@ -28,9 +28,31 @@ const TVDisplay = () => {
   useEffect(() => {
     if (soundEnabled && servingTokens.length > 0) {
       const latestToken = servingTokens[servingTokens.length - 1];
-      // Basic Text-to-Speech
-      const msg = new SpeechSynthesisUtterance(`Token number ${latestToken.tokenId.replace('-', ' ')} please proceed to ${latestToken.servedBy}`);
-      window.speechSynthesis.speak(msg);
+      
+      // Format token for better pronunciation
+      const tokenNumber = latestToken.tokenId.split('-')[1];
+      const tokenLetter = latestToken.tokenId.split('-')[0];
+      const tokenStrEn = `${tokenLetter} ${tokenNumber.split('').join(' ')}`;
+      const tokenStrHi = `${tokenLetter} ${tokenNumber.split('').join(' ')}`;
+      
+      const englishMsg = new SpeechSynthesisUtterance(`Token number ${tokenStrEn}, please proceed to ${latestToken.servedBy}`);
+      const hindiMsg = new SpeechSynthesisUtterance(`टोकन नंबर ${tokenStrHi}, कृपया ${latestToken.servedBy} पर जाएँ`);
+      
+      // Set properties
+      englishMsg.rate = 0.9;
+      hindiMsg.rate = 0.9;
+      
+      // Try to find Indian voices
+      const voices = window.speechSynthesis.getVoices();
+      const hindiVoice = voices.find(v => v.lang === 'hi-IN' || v.lang === 'hi_IN');
+      const englishVoice = voices.find(v => v.lang === 'en-IN' || v.lang === 'en_IN' || v.name.includes('India'));
+      
+      if (englishVoice) englishMsg.voice = englishVoice;
+      if (hindiVoice) hindiMsg.voice = hindiVoice;
+
+      // Ensure voices are loaded before speaking, or just fallback to default
+      window.speechSynthesis.speak(englishMsg);
+      window.speechSynthesis.speak(hindiMsg);
     }
   }, [servingTokens.length, soundEnabled]);
 

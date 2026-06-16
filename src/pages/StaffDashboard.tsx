@@ -4,6 +4,8 @@ import { Play, SkipForward, CheckCircle, XCircle, RotateCcw, AlertTriangle } fro
 import { format } from 'date-fns';
 import type { QueueStatus, PriorityLevel } from '../types';
 
+import { motion, AnimatePresence } from 'framer-motion';
+
 const StaffDashboard = () => {
   const { tokens, callNext, updateStatus, updatePriority } = useQueueStore();
   const [activeCounter, setActiveCounter] = useState('Counter 1');
@@ -35,19 +37,19 @@ const StaffDashboard = () => {
 
   const getStatusBadge = (status: QueueStatus) => {
     const styles = {
-      'waiting': 'bg-yellow-100 text-yellow-800',
-      'in-process': 'bg-blue-100 text-blue-800',
-      'completed': 'bg-green-100 text-green-800',
-      'skipped': 'bg-slate-100 text-slate-800',
-      'cancelled': 'bg-red-100 text-red-800',
+      'waiting': 'bg-amber-100 text-amber-800 border-amber-200',
+      'in-process': 'bg-blue-100 text-blue-800 border-blue-200',
+      'completed': 'bg-emerald-100 text-emerald-800 border-emerald-200',
+      'skipped': 'bg-slate-100 text-slate-800 border-slate-200',
+      'cancelled': 'bg-red-100 text-red-800 border-red-200',
     };
-    return <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${styles[status]}`}>{status.replace('-', ' ')}</span>;
+    return <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border ${styles[status]}`}>{status.replace('-', ' ')}</span>;
   };
 
   const getPriorityBadge = (priority: PriorityLevel) => {
     if (priority === 'normal') return null;
     return (
-      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 ml-2">
+      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-rose-100 text-rose-800 ml-2 uppercase tracking-wide">
         <AlertTriangle className="w-3 h-3 mr-1" />
         {priority}
       </span>
@@ -59,24 +61,24 @@ const StaffDashboard = () => {
   return (
     <div className="space-y-6">
       {errorMsg && (
-        <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg">
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg shadow-sm">
           <div className="flex">
             <div className="flex-shrink-0">
-              <AlertTriangle className="h-5 w-5 text-red-400" />
+              <AlertTriangle className="h-5 w-5 text-red-500" />
             </div>
             <div className="ml-3">
-              <p className="text-sm text-red-700 font-medium">Error: {errorMsg}</p>
+              <p className="text-sm text-red-800 font-medium">Error: {errorMsg}</p>
             </div>
           </div>
-        </div>
+        </motion.div>
       )}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h1 className="text-2xl font-bold text-slate-900">Staff Dashboard</h1>
-        <div className="flex items-center space-x-4">
+        <h1 className="text-3xl font-black text-slate-900 tracking-tight">Staff Area</h1>
+        <div className="flex items-center space-x-4 bg-white p-2 rounded-2xl shadow-sm border border-slate-200">
           <select 
             value={activeCounter}
             onChange={(e) => setActiveCounter(e.target.value)}
-            className="block w-full pl-3 pr-10 py-2 text-base border-slate-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-lg border shadow-sm"
+            className="block w-full pl-4 pr-10 py-2.5 text-sm font-medium border-none focus:ring-0 text-slate-700 bg-transparent cursor-pointer"
           >
             <option>Counter 1</option>
             <option>Counter 2</option>
@@ -85,41 +87,52 @@ const StaffDashboard = () => {
           <button
             onClick={handleCallNext}
             disabled={!!currentToken}
-            className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center px-6 py-2.5 border border-transparent shadow-sm text-sm font-bold rounded-xl text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
-            <Play className="mr-2 h-4 w-4" /> Call Next
+            <Play className="mr-2 h-4 w-4 fill-current" /> Call Next
           </button>
         </div>
       </div>
 
-      {currentToken && (
-        <div className="bg-white rounded-2xl shadow-sm border border-primary-100 overflow-hidden">
-          <div className="bg-primary-50 px-6 py-4 border-b border-primary-100 flex justify-between items-center">
-            <h2 className="text-lg font-bold text-primary-900">Currently Serving</h2>
-            <span className="text-2xl font-black text-primary-600">{currentToken.tokenId}</span>
-          </div>
-          <div className="p-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <div>
-              <p className="text-xl font-bold text-slate-900">{currentToken.patientName}</p>
-              <p className="text-sm text-slate-500 mt-1">{currentToken.mobile} • {currentToken.purpose}</p>
+      <AnimatePresence>
+        {currentToken && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="bg-gradient-to-br from-primary-900 via-primary-800 to-indigo-900 rounded-3xl shadow-xl overflow-hidden relative"
+          >
+            <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-white opacity-5 rounded-full blur-3xl pointer-events-none"></div>
+            <div className="px-8 py-6 flex justify-between items-center border-b border-white/10">
+              <h2 className="text-sm font-bold text-primary-200 uppercase tracking-widest">Currently Serving</h2>
+              <span className="px-3 py-1 bg-white/10 text-white rounded-full text-xs font-bold border border-white/20 backdrop-blur-sm">
+                {activeCounter}
+              </span>
             </div>
-            <div className="flex space-x-3">
-              <button
-                onClick={() => handleStatusUpdate(currentToken.tokenId, 'completed')}
-                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-green-600 hover:bg-green-700 transition-colors"
-              >
-                <CheckCircle className="mr-2 h-4 w-4" /> Complete
-              </button>
-              <button
-                onClick={() => handleStatusUpdate(currentToken.tokenId, 'skipped')}
-                className="inline-flex items-center px-4 py-2 border border-slate-300 shadow-sm text-sm font-medium rounded-lg text-slate-700 bg-white hover:bg-slate-50 transition-colors"
-              >
-                <SkipForward className="mr-2 h-4 w-4" /> Skip
-              </button>
+            <div className="p-8 flex flex-col sm:flex-row justify-between items-center gap-6 relative z-10">
+              <div>
+                <div className="text-6xl font-black text-white tracking-tighter mb-2">{currentToken.tokenId}</div>
+                <p className="text-2xl font-bold text-primary-100">{currentToken.patientName}</p>
+                <p className="text-sm text-primary-300 mt-1 font-medium">{currentToken.mobile} • {currentToken.purpose}</p>
+              </div>
+              <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 w-full sm:w-auto">
+                <button
+                  onClick={() => handleStatusUpdate(currentToken.tokenId, 'completed')}
+                  className="w-full sm:w-auto inline-flex justify-center items-center px-6 py-3 border border-transparent shadow-lg text-sm font-bold rounded-xl text-emerald-900 bg-emerald-400 hover:bg-emerald-300 transition-colors"
+                >
+                  <CheckCircle className="mr-2 h-5 w-5" /> Complete
+                </button>
+                <button
+                  onClick={() => handleStatusUpdate(currentToken.tokenId, 'skipped')}
+                  className="w-full sm:w-auto inline-flex justify-center items-center px-6 py-3 border border-white/20 shadow-lg text-sm font-bold rounded-xl text-white bg-white/10 hover:bg-white/20 backdrop-blur-sm transition-colors"
+                >
+                  <SkipForward className="mr-2 h-5 w-5" /> Skip
+                </button>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="bg-white shadow-sm rounded-2xl border border-slate-200 overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-200">

@@ -63,14 +63,15 @@ const AdminDashboard = () => {
     alert('Settings saved successfully!');
   };
 
-  const StatCard = ({ title, value, icon: Icon, colorClass }: any) => (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex items-center">
-      <div className={`p-4 rounded-xl ${colorClass}`}>
+  const StatCard = ({ title, value, icon: Icon, colorClass, gradient }: any) => (
+    <div className={`relative overflow-hidden bg-white rounded-3xl shadow-sm border border-slate-100 p-6 flex items-center transition-transform hover:scale-[1.02]`}>
+      <div className={`absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full opacity-20 blur-2xl pointer-events-none ${gradient}`}></div>
+      <div className={`p-4 rounded-2xl shadow-inner relative z-10 ${colorClass}`}>
         <Icon className="h-8 w-8 text-white" />
       </div>
-      <div className="ml-5">
-        <p className="text-sm font-medium text-slate-500">{title}</p>
-        <h3 className="text-3xl font-bold text-slate-900">{value}</h3>
+      <div className="ml-6 relative z-10">
+        <p className="text-sm font-semibold text-slate-500 uppercase tracking-wider">{title}</p>
+        <h3 className="text-4xl font-black text-slate-900 tracking-tight mt-1">{value}</h3>
       </div>
     </div>
   );
@@ -90,10 +91,10 @@ const AdminDashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard title="Total Patients" value={totalCount} icon={Users} colorClass="bg-blue-500" />
-        <StatCard title="Waiting" value={waitingCount} icon={Clock} colorClass="bg-yellow-500" />
-        <StatCard title="Completed" value={completedCount} icon={CheckCircle} colorClass="bg-green-500" />
-        <StatCard title="Skipped/Cancelled" value={skippedCount} icon={SkipForward} colorClass="bg-slate-500" />
+        <StatCard title="Total Patients" value={totalCount} icon={Users} colorClass="bg-blue-600" gradient="bg-blue-500" />
+        <StatCard title="Waiting" value={waitingCount} icon={Clock} colorClass="bg-amber-500" gradient="bg-amber-400" />
+        <StatCard title="Completed" value={completedCount} icon={CheckCircle} colorClass="bg-emerald-500" gradient="bg-emerald-400" />
+        <StatCard title="Skipped/Cancel" value={skippedCount} icon={SkipForward} colorClass="bg-slate-700" gradient="bg-slate-500" />
       </div>
 
       <div className="bg-white shadow-sm rounded-2xl border border-slate-200 overflow-hidden print:hidden">
