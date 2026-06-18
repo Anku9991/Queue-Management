@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Activity, ArrowRight, User, Phone, FileText } from 'lucide-react';
+import { ArrowRight, User, Phone, FileText } from 'lucide-react';
 import { useQueueStore } from '../store/useQueueStore';
 
 const PatientLanding = () => {

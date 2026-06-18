@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth, isFirebaseConfigured } from '../lib/firebase';
-import { ShieldAlert } from 'lucide-react';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');

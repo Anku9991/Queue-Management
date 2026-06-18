@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Outlet, Link, useLocation, Navigate } from 'react-router-dom';
-import { Activity, Users, MonitorPlay, LogOut } from 'lucide-react';
+import { Users, MonitorPlay, LogOut, Activity } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useQueueStore } from '../store/useQueueStore';
 import { auth, isFirebaseConfigured } from '../lib/firebase';
