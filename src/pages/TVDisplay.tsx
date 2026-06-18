@@ -66,6 +66,7 @@ const TVDisplay = () => {
       {/* Header */}
       <header className="bg-slate-800 border-b border-slate-700 px-8 py-4 flex justify-between items-center">
         <div className="flex items-center">
+          <img src="/logo.png" alt="Logo" className="h-12 w-auto object-contain mr-4" />
           <h1 className="text-3xl font-extrabold text-white tracking-tight">{settings.hospitalName}</h1>
           <span className="ml-4 px-3 py-1 bg-primary-900 text-primary-400 rounded-full text-sm font-medium border border-primary-800">
             Live Queue Status

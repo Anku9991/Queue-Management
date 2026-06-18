@@ -40,8 +40,8 @@ const LoginPage = () => {
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
-          <div className="h-12 w-12 bg-primary-100 rounded-xl flex items-center justify-center">
-            <ShieldAlert className="h-8 w-8 text-primary-600" />
+          <div className="h-20 w-auto flex items-center justify-center mb-2">
+            <img src="/logo.png" alt="Logo" className="h-full w-auto object-contain" />
           </div>
         </div>
         <h2 className="mt-6 text-center text-3xl font-extrabold text-slate-900">

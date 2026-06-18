@@ -53,8 +53,8 @@ const Layout = () => {
           <div className="flex justify-between h-16">
             <div className="flex">
               <div className="flex-shrink-0 flex items-center">
-                <Activity className="h-8 w-8 text-primary-600" />
-                <span className="ml-2 text-xl font-bold text-slate-900">{settings.hospitalName}</span>
+                <img src="/logo.png" alt="Logo" className="h-10 w-auto object-contain" />
+                <span className="ml-3 text-xl font-bold text-slate-900">{settings.hospitalName}</span>
               </div>
               <nav className="hidden sm:ml-6 sm:flex sm:space-x-8">
                 {navItems.map((item) => {

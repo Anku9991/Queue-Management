@@ -44,8 +44,8 @@ const PatientLanding = () => {
           animate={{ y: 0, opacity: 1 }}
           className="flex justify-center"
         >
-          <div className="h-16 w-16 bg-primary-600 rounded-2xl shadow-xl flex items-center justify-center">
-            <Activity className="h-10 w-10 text-white" />
+          <div className="h-24 w-auto flex items-center justify-center mb-4">
+            <img src="/logo.png" alt="Smart Queue Logo" className="h-full w-auto object-contain drop-shadow-md" />
           </div>
         </motion.div>
         <motion.h2 
