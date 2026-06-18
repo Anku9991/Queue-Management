@@ -1,7 +1,5 @@
 import { QRCodeSVG } from 'qrcode.react';
 import { useQueueStore } from '../store/useQueueStore';
-import { Activity } from 'lucide-react';
-
 const QRPoster = () => {
   const { settings } = useQueueStore();
   // Get the current origin (e.g., http://localhost:5173 or the deployed domain)
@@ -16,8 +14,8 @@ const QRPoster = () => {
           <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-[#8CC63F] opacity-20 rounded-full blur-2xl"></div>
           
           <div className="flex justify-center mb-6 relative z-10">
-            <div className="h-24 w-24 bg-white rounded-full shadow-lg flex items-center justify-center border-4 border-[#8CC63F]">
-              <Activity className="h-12 w-12 text-[#002D62]" />
+            <div className="h-32 bg-white rounded-2xl shadow-lg flex items-center justify-center border-4 border-[#8CC63F] p-4 mb-4">
+              <img src="/logo.png" alt="Logo" className="h-full w-auto object-contain" />
             </div>
           </div>
           <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight relative z-10 text-white">
