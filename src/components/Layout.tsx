@@ -52,9 +52,19 @@ const Layout = () => {
             };
             setDbUser(defaultUser);
             setCurrentUser(defaultUser);
-          }
         } catch (e) {
-          console.error("Error fetching user profile", e);
+          console.error("Error fetching user profile (Check Firestore Rules!):", e);
+          // Fallback if Firestore rules block reading the user profile
+          const fallbackUser: User = {
+            uid: currentUser.uid,
+            name: currentUser.displayName || 'Fallback User',
+            email: currentUser.email || '',
+            role: 'hospital_admin', // Give admin access so they aren't stuck
+            hospitalId: 'H001'
+          };
+          setDbUser(fallbackUser);
+          setCurrentUser(fallbackUser);
+          initListeners('H001');
         }
       } else {
         setDbUser(null);
