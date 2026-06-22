@@ -1,13 +1,14 @@
 import { create } from 'zustand';
 import type { Token, Hospital, User } from '../types';
 import { db, isFirebaseConfigured } from '../lib/firebase';
-import { collection, doc, setDoc, updateDoc, onSnapshot, query, orderBy, where } from 'firebase/firestore';
+import { collection, doc, setDoc, updateDoc, onSnapshot, query, where } from 'firebase/firestore';
 
 interface QueueState {
   tokens: Token[];
   hospital: Hospital | null;
   activeHospitalId: string | null;
   currentUser: User | null;
+  listeners: Array<() => void>;
   
   // Actions
   setHospitalId: (hospitalId: string) => void;
@@ -39,6 +40,7 @@ export const useQueueStore = create<QueueState>((set, get) => ({
   tokens: [],
   hospital: isFirebaseConfigured ? null : MOCK_HOSPITAL,
   activeHospitalId: isFirebaseConfigured ? null : 'H001',
+  listeners: [],
   currentUser: isFirebaseConfigured ? null : {
     uid: 'mock-uid',
     name: 'Preview User',
@@ -53,7 +55,11 @@ export const useQueueStore = create<QueueState>((set, get) => ({
   initListeners: (hospitalId) => {
     if (!isFirebaseConfigured || !db || !hospitalId) return;
 
-    set({ activeHospitalId: hospitalId });
+    // Unsubscribe from previous listeners if any
+    const { listeners } = get();
+    listeners.forEach(unsub => unsub());
+
+    set({ activeHospitalId: hospitalId, listeners: [] });
 
     // Listen to tokens
     // We remove the complex query (timestamp) to prevent Firestore "Missing Index" errors.
@@ -66,7 +72,7 @@ export const useQueueStore = create<QueueState>((set, get) => ({
       where('hospitalId', '==', hospitalId)
     );
     
-    onSnapshot(q, (snapshot) => {
+    const unsubTokens = onSnapshot(q, (snapshot) => {
       const liveTokens: Token[] = [];
       snapshot.forEach((doc) => {
         const data = doc.data() as Token;
@@ -85,7 +91,7 @@ export const useQueueStore = create<QueueState>((set, get) => ({
     });
 
     // Listen to hospital profile
-    onSnapshot(doc(db, 'hospitals', hospitalId), (docSnap) => {
+    const unsubHospital = onSnapshot(doc(db, 'hospitals', hospitalId), (docSnap) => {
       if (docSnap.exists()) {
         set({ hospital: { id: docSnap.id, ...docSnap.data() } as Hospital });
       } else {
@@ -97,6 +103,8 @@ export const useQueueStore = create<QueueState>((set, get) => ({
       // Fallback to mock so the UI doesn't hang if rules block read
       set({ hospital: { ...MOCK_HOSPITAL, id: hospitalId } });
     });
+
+    set(() => ({ listeners: [unsubTokens, unsubHospital] }));
   },
 
   generateToken: async (hospitalId, patientInfo) => {

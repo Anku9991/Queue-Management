@@ -1,12 +1,18 @@
 import { useState, useEffect } from 'react';
 import { db } from '../lib/firebase';
 import { collection, query, getDocs, setDoc, doc, deleteDoc } from 'firebase/firestore';
-import { Hospital, Building, Shield, Trash2 } from 'lucide-react';
+import { Hospital, Building, Shield, Trash2, ArrowRightCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useQueueStore } from '../store/useQueueStore';
+import { useNavigate } from 'react-router-dom';
 
 const SuperAdminDashboard = () => {
   const [hospitals, setHospitals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  const initListeners = useQueueStore(state => state.initListeners);
+  const activeHospitalId = useQueueStore(state => state.activeHospitalId);
+  const navigate = useNavigate();
 
   // Form State
   const [hospitalName, setHospitalName] = useState('');
@@ -53,8 +59,6 @@ const SuperAdminDashboard = () => {
       await setDoc(doc(db, 'hospitals', hospitalId), newHospital);
 
       // 2. Assign Admin User Role in Users Collection
-      // Note: We're doing this by email. When the user logs in, the Layout component will pick this up if they match email.
-      // Alternatively, we create a user document where ID = email (for easy lookup).
       if (adminEmail && db) {
         await setDoc(doc(db, 'users', adminEmail.toLowerCase()), {
           email: adminEmail.toLowerCase(),
@@ -85,6 +89,12 @@ const SuperAdminDashboard = () => {
       console.error(err);
       toast.error('Failed to delete hospital.');
     }
+  };
+
+  const handleSwitchWorkspace = (hospitalId: string) => {
+    initListeners(hospitalId);
+    toast.success(`Switched workspace to ${hospitalId}`);
+    navigate('/staff');
   };
 
   if (loading) return <div className="text-center py-12 text-slate-500 font-medium">Loading Hospitals...</div>;
@@ -165,11 +175,14 @@ const SuperAdminDashboard = () => {
             
             <div className="divide-y divide-slate-100">
               {hospitals.map(h => (
-                <div key={h.id} className="p-6 hover:bg-slate-50/80 transition-colors flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div key={h.id} className={`p-6 hover:bg-slate-50/80 transition-colors flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 ${activeHospitalId === h.id ? 'bg-primary-50/50' : ''}`}>
                   <div className="flex items-center">
                     <img src={h.logo || 'https://cdn-icons-png.flaticon.com/512/4320/4320337.png'} alt="logo" className="w-12 h-12 rounded-xl object-contain bg-white border border-slate-200 p-1 mr-4" />
                     <div>
-                      <h4 className="text-lg font-bold text-slate-900 leading-tight">{h.hospitalName}</h4>
+                      <h4 className="text-lg font-bold text-slate-900 leading-tight">
+                        {h.hospitalName} 
+                        {activeHospitalId === h.id && <span className="ml-2 text-[10px] bg-primary-100 text-primary-700 px-2 py-0.5 rounded-full uppercase tracking-widest font-black">Active Workspace</span>}
+                      </h4>
                       <p className="text-sm font-medium text-slate-500 mt-0.5">ID: {h.id} • Prefix: {h.prefix}</p>
                     </div>
                   </div>
@@ -183,8 +196,17 @@ const SuperAdminDashboard = () => {
                     </div>
                     
                     <button 
+                      onClick={() => handleSwitchWorkspace(h.id)}
+                      className="p-2 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition-colors font-bold text-sm flex items-center"
+                      title="Switch to Workspace"
+                    >
+                      <ArrowRightCircle className="w-5 h-5 sm:mr-2" />
+                      <span className="hidden sm:inline">Workspace</span>
+                    </button>
+                    
+                    <button 
                       onClick={() => handleDeleteHospital(h.id)}
-                      className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                      className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors"
                       title="Delete Hospital"
                     >
                       <Trash2 className="w-5 h-5" />
