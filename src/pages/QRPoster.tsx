@@ -1,85 +1,112 @@
 import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { QRCodeSVG } from 'qrcode.react';
 import { useQueueStore } from '../store/useQueueStore';
+import { QRCodeSVG } from 'qrcode.react';
+import { motion } from 'framer-motion';
+import { Smartphone, Zap, Clock } from 'lucide-react';
 
 const QRPoster = () => {
   const { hospitalId } = useParams<{ hospitalId: string }>();
   const { hospital, initListeners } = useQueueStore();
-  
+
   useEffect(() => {
-    if (hospitalId) initListeners(hospitalId);
+    if (hospitalId) {
+      initListeners(hospitalId);
+    }
   }, [hospitalId, initListeners]);
 
-  // Get the current origin (e.g., http://localhost:5173 or the deployed domain)
-  const patientPortalUrl = window.location.origin + `/register/${hospitalId || ''}`;
-
   if (!hospital) {
-    return <div className="min-h-screen bg-slate-50 flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div></div>;
+    return <div className="min-h-screen flex items-center justify-center bg-slate-50"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div></div>;
   }
 
+  const registerUrl = `${window.location.origin}/register/${hospital.id}`;
+
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-8 print:p-0 print:bg-white">
-      <div className="max-w-2xl w-full bg-white rounded-3xl shadow-2xl overflow-hidden print:shadow-none border border-slate-100 print:border-none text-center">
+    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-8 relative overflow-hidden">
+      
+      {/* Decorative background */}
+      <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-primary-600/20 blur-[120px] pointer-events-none"></div>
+      <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] rounded-full bg-indigo-600/20 blur-[120px] pointer-events-none"></div>
+
+      <div className="flex w-full max-w-6xl gap-8 items-stretch relative z-10">
         
-        <div className="bg-[#002D62] px-8 py-12 text-white relative overflow-hidden border-b-8 border-[#8CC63F]">
-          <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-white opacity-10 rounded-full blur-2xl"></div>
-          <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-[#8CC63F] opacity-20 rounded-full blur-2xl"></div>
+        {/* Left Side: Branding & Instructions */}
+        <div className="flex-[1.5] text-white flex flex-col justify-center pr-8">
+          {hospital.logo && <img src={hospital.logo} alt="Logo" className="h-20 w-auto mb-8" />}
           
-          <div className="flex justify-center mb-6 relative z-10">
-            <div className="h-32 bg-white rounded-2xl shadow-lg flex items-center justify-center border-4 border-[#8CC63F] p-4 mb-4">
-              <img src={hospital.logo || "/logo.png"} alt="Logo" className="h-full w-auto object-contain" />
-            </div>
-          </div>
-          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight relative z-10 text-white">
-            {hospital.hospitalName}
+          <h1 className="text-6xl font-black tracking-tight mb-4 leading-tight">
+            Welcome to <br/>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-indigo-400">
+              {hospital.hospitalName}
+            </span>
           </h1>
-          <p className="mt-4 text-xl sm:text-2xl text-blue-100 font-medium relative z-10">
-            Scan to get your Queue Token
-          </p>
-        </div>
-
-        <div className="p-12 flex flex-col items-center bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-blue-50/30">
-          <div className="bg-white p-6 rounded-3xl shadow-xl border-4 border-[#002D62]/10 relative">
-            <div className="absolute -top-3 -right-3 h-8 w-8 bg-[#8CC63F] rounded-full animate-ping opacity-75"></div>
-            <div className="absolute -top-3 -right-3 h-8 w-8 bg-[#8CC63F] rounded-full"></div>
-            <QRCodeSVG 
-              value={patientPortalUrl} 
-              size={300}
-              level="H"
-              includeMargin={true}
-              className="rounded-xl"
-            />
-          </div>
           
-          <div className="mt-10 space-y-4">
-            <h2 className="text-3xl font-bold text-[#002D62]">No more waiting in line!</h2>
-            <div className="flex justify-center space-x-6 text-slate-600 font-medium text-lg">
-              <span className="flex items-center">
-                <span className="h-8 w-8 rounded-full bg-[#002D62] text-white flex items-center justify-center mr-3 font-bold shadow-md border-2 border-[#8CC63F]">1</span>
-                Scan QR Code
-              </span>
-              <span className="flex items-center">
-                <span className="h-8 w-8 rounded-full bg-[#002D62] text-white flex items-center justify-center mr-3 font-bold shadow-md border-2 border-[#8CC63F]">2</span>
-                Fill Details
-              </span>
-              <span className="flex items-center">
-                <span className="h-8 w-8 rounded-full bg-[#002D62] text-white flex items-center justify-center mr-3 font-bold shadow-md border-2 border-[#8CC63F]">3</span>
-                Get Token
-              </span>
+          <p className="text-2xl text-slate-300 font-medium mb-12">
+            Scan the QR code to join the queue and track your live status. No more waiting in lines!
+          </p>
+
+          <div className="space-y-6">
+            <div className="flex items-center">
+              <div className="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center mr-6 border border-white/20 backdrop-blur-sm">
+                <Smartphone className="w-7 h-7 text-primary-400" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold">1. Scan the Code</h3>
+                <p className="text-slate-400">Open your phone's camera and point it at the QR.</p>
+              </div>
+            </div>
+            <div className="flex items-center">
+              <div className="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center mr-6 border border-white/20 backdrop-blur-sm">
+                <Zap className="w-7 h-7 text-amber-400" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold">2. Enter Details</h3>
+                <p className="text-slate-400">Quickly fill in your name and phone number.</p>
+              </div>
+            </div>
+            <div className="flex items-center">
+              <div className="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center mr-6 border border-white/20 backdrop-blur-sm">
+                <Clock className="w-7 h-7 text-emerald-400" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold">3. Relax & Wait</h3>
+                <p className="text-slate-400">Get a live token and a notification when it's your turn.</p>
+              </div>
             </div>
           </div>
         </div>
-        
-        <div className="bg-slate-50 py-6 border-t border-slate-100 print:hidden">
-          <button 
-            onClick={() => window.print()} 
-            className="px-8 py-3 bg-primary-600 text-white font-bold rounded-xl shadow-md hover:bg-primary-700 transition-colors"
-          >
-            Print Poster
-          </button>
-        </div>
 
+        {/* Right Side: QR Code Area */}
+        <div className="flex-1 flex flex-col items-center justify-center">
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 200, damping: 20 }}
+            className="bg-white p-12 rounded-[3rem] shadow-[0_0_80px_rgba(255,255,255,0.1)] relative"
+          >
+            <div className="absolute inset-0 border-[8px] border-primary-100 rounded-[3rem] pointer-events-none transform -rotate-3 transition-transform hover:rotate-0 duration-500"></div>
+            
+            <div className="text-center mb-8 relative z-10">
+              <div className="inline-block bg-primary-100 text-primary-800 px-6 py-2 rounded-full font-black uppercase tracking-widest text-sm mb-4">
+                Scan Here
+              </div>
+            </div>
+            
+            <div className="bg-white p-4 rounded-3xl shadow-sm border border-slate-100 relative z-10">
+              <QRCodeSVG
+                value={registerUrl}
+                size={320}
+                level="H"
+                includeMargin={false}
+                fgColor="#0f172a"
+              />
+            </div>
+            
+            <p className="text-center mt-8 text-slate-500 font-bold uppercase tracking-wider relative z-10">
+              {registerUrl.replace(/^https?:\/\//, '')}
+            </p>
+          </motion.div>
+        </div>
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-export type QueueStatus = 'waiting' | 'serving' | 'completed' | 'skipped' | 'cancelled';
+export type QueueStatus = 'waiting' | 'serving' | 'completed' | 'skipped' | 'cancelled' | 'hold';
 export type PriorityLevel = 'normal' | 'senior' | 'emergency' | 'vip' | 'pregnant' | 'disabled';
 
 export interface Hospital {
