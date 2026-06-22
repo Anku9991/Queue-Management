@@ -5,7 +5,7 @@ import { cn } from '../lib/utils';
 import { useQueueStore } from '../store/useQueueStore';
 import { auth, db, isFirebaseConfigured } from '../lib/firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import type { User as AuthUser } from 'firebase/auth';
 import type { User } from '../types';
 
@@ -50,6 +50,11 @@ const Layout = () => {
               role: 'super_admin', // Make the first unknown user a super admin to let them set up the system
               hospitalId: 'H001'
             };
+            try {
+              await setDoc(doc(db, 'users', currentUser.uid), defaultUser);
+            } catch (err) {
+              console.error("Could not create user document", err);
+            }
             setDbUser(defaultUser);
             setCurrentUser(defaultUser);
             initListeners('H001');
