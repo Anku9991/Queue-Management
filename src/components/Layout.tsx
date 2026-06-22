@@ -28,10 +28,13 @@ const Layout = () => {
         try {
           const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
           if (userDoc.exists()) {
-            const userData = userDoc.data() as User;
+            const rawData = userDoc.data();
+            const userData = { ...rawData } as User;
+            
             // Legacy data migration: automatically assign H001 to existing users
             if (!userData.hospitalId) userData.hospitalId = 'H001';
             if (!userData.role) userData.role = 'hospital_admin';
+            if ((userData.role as any) === 'admin') userData.role = 'hospital_admin';
 
             setDbUser(userData);
             setCurrentUser(userData);

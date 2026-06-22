@@ -70,6 +70,8 @@ export const useQueueStore = create<QueueState>((set, get) => ({
       const liveTokens: Token[] = [];
       snapshot.forEach((doc) => liveTokens.push({ id: doc.id, ...doc.data() } as Token));
       set({ tokens: liveTokens });
+    }, (error) => {
+      console.error("Error fetching tokens (Check Firestore Rules!):", error);
     });
 
     // Listen to hospital profile
@@ -80,6 +82,10 @@ export const useQueueStore = create<QueueState>((set, get) => ({
         // Fallback for new unconfigured hospital / legacy migration
         set({ hospital: { ...MOCK_HOSPITAL, id: hospitalId } });
       }
+    }, (error) => {
+      console.error("Error fetching hospital (Check Firestore Rules!):", error);
+      // Fallback to mock so the UI doesn't hang if rules block read
+      set({ hospital: { ...MOCK_HOSPITAL, id: hospitalId } });
     });
   },
 
