@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQueueStore } from '../store/useQueueStore';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -10,6 +10,7 @@ const TVDisplay = () => {
   const { tokens, hospital, initListeners } = useQueueStore();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [audioEnabled, setAudioEnabled] = useState(false);
+  const lastSpokenTokenRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (hospitalId) {
@@ -30,7 +31,12 @@ const TVDisplay = () => {
     if (!audioEnabled) return;
     
     const recentlyCalled = servingTokens[0];
-    if (recentlyCalled && recentlyCalled.servedAt && (Date.now() - recentlyCalled.servedAt < 5000)) {
+    // Check if there's a token that was served recently AND hasn't been spoken yet
+    if (recentlyCalled && recentlyCalled.servedAt && (Date.now() - recentlyCalled.servedAt < 10000)) {
+      if (lastSpokenTokenRef.current === recentlyCalled.id) return;
+      
+      lastSpokenTokenRef.current = recentlyCalled.id;
+
       const text = `Token number ${recentlyCalled.tokenId}, Please proceed to ${recentlyCalled.servedBy}`;
       const hindiText = `Token number ${recentlyCalled.tokenId}, kripya ${recentlyCalled.servedBy} par jaayein`;
       
