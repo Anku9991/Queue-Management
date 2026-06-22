@@ -41,6 +41,12 @@ const QRPoster = () => {
             </span>
           </h1>
           
+          <div className="flex items-center mb-12 bg-white/5 inline-flex p-3 pr-5 rounded-full border border-white/10 self-start backdrop-blur-md">
+            <span className="text-slate-400 text-sm font-bold mr-3 uppercase tracking-widest">Powered By</span>
+            <img src="/logo.png" alt="PihNexa Logo" className="h-6 w-auto" />
+            <span className="text-white font-bold ml-2 text-lg">PihNexa Technologies</span>
+          </div>
+          
           <p className="text-2xl text-slate-300 font-medium mb-12">
             Scan the QR code to join the queue and track your live status. No more waiting in lines!
           </p>
