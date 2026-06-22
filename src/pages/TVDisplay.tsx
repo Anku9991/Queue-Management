@@ -10,7 +10,7 @@ const TVDisplay = () => {
   const { tokens, hospital, initListeners } = useQueueStore();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [audioEnabled, setAudioEnabled] = useState(false);
-  const lastSpokenTokenRef = useRef<string | null>(null);
+  const lastSpokenTokenRef = useRef<string | null | undefined>(null);
 
   useEffect(() => {
     if (hospitalId) {
