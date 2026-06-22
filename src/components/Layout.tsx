@@ -63,12 +63,18 @@ const Layout = () => {
 
   const navItems = [];
   
-  if (dbUser?.role === 'super_admin') {
+  if (!isFirebaseConfigured) {
+    navItems.push({ name: 'Staff Dashboard', path: '/staff', icon: Users });
+    navItems.push({ name: 'Admin Analytics', path: '/admin', icon: Activity });
     navItems.push({ name: 'Global Dashboard', path: '/super-admin', icon: LayoutDashboard });
   } else {
-    navItems.push({ name: 'Staff Dashboard', path: '/staff', icon: Users });
-    if (dbUser?.role === 'hospital_admin') {
-      navItems.push({ name: 'Admin Analytics', path: '/admin', icon: Activity });
+    if (dbUser?.role === 'super_admin') {
+      navItems.push({ name: 'Global Dashboard', path: '/super-admin', icon: LayoutDashboard });
+    } else {
+      navItems.push({ name: 'Staff Dashboard', path: '/staff', icon: Users });
+      if (dbUser?.role === 'hospital_admin') {
+        navItems.push({ name: 'Admin Analytics', path: '/admin', icon: Activity });
+      }
     }
   }
 

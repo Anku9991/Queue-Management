@@ -22,11 +22,30 @@ interface QueueState {
 
 const generateId = () => Math.random().toString(36).substring(2, 9);
 
+const MOCK_HOSPITAL: Hospital = {
+  id: 'H001',
+  hospitalName: 'Apollo Hospital (Preview)',
+  prefix: 'APO',
+  subscriptionPlan: 'enterprise',
+  status: 'active',
+  createdAt: Date.now(),
+  resetTime: '00:00',
+  counters: ['Counter 1', 'Counter 2', 'Counter 3'],
+  departments: ['General OPD', 'Pediatrics', 'Orthopedics'],
+  floors: ['Ground Floor']
+};
+
 export const useQueueStore = create<QueueState>((set, get) => ({
   tokens: [],
-  hospital: null,
-  activeHospitalId: null,
-  currentUser: null,
+  hospital: isFirebaseConfigured ? null : MOCK_HOSPITAL,
+  activeHospitalId: isFirebaseConfigured ? null : 'H001',
+  currentUser: isFirebaseConfigured ? null : {
+    uid: 'mock-uid',
+    name: 'Preview User',
+    email: 'preview@example.com',
+    role: 'super_admin',
+    hospitalId: 'H001'
+  },
 
   setHospitalId: (hospitalId) => set({ activeHospitalId: hospitalId }),
   setCurrentUser: (user) => set({ currentUser: user }),
