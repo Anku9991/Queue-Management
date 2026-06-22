@@ -55,23 +55,33 @@ export const useQueueStore = create<QueueState>((set, get) => ({
 
     set({ activeHospitalId: hospitalId });
 
-    // Listen to tokens (Only fetch today's tokens to avoid loading old data)
+    // Listen to tokens
+    // We remove the complex query (timestamp) to prevent Firestore "Missing Index" errors.
+    // Instead, we fetch all tokens for the hospital and filter/sort them on the client side.
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
 
     const q = query(
       collection(db, 'tokens'), 
-      where('hospitalId', '==', hospitalId),
-      where('timestamp', '>=', startOfDay.getTime()),
-      orderBy('timestamp', 'asc')
+      where('hospitalId', '==', hospitalId)
     );
     
     onSnapshot(q, (snapshot) => {
       const liveTokens: Token[] = [];
-      snapshot.forEach((doc) => liveTokens.push({ id: doc.id, ...doc.data() } as Token));
+      snapshot.forEach((doc) => {
+        const data = doc.data() as Token;
+        // Client-side filter for today's tokens to avoid composite index requirement
+        if (data.timestamp >= startOfDay.getTime()) {
+          liveTokens.push({ id: doc.id, ...data });
+        }
+      });
+      
+      // Client-side sort by timestamp ascending
+      liveTokens.sort((a, b) => a.timestamp - b.timestamp);
+      
       set({ tokens: liveTokens });
     }, (error) => {
-      console.error("Error fetching tokens (Check Firestore Rules!):", error);
+      console.error("Error fetching tokens:", error);
     });
 
     // Listen to hospital profile
