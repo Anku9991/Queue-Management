@@ -52,6 +52,7 @@ const Layout = () => {
             };
             setDbUser(defaultUser);
             setCurrentUser(defaultUser);
+          }
         } catch (e) {
           console.error("Error fetching user profile (Check Firestore Rules!):", e);
           // Fallback if Firestore rules block reading the user profile
