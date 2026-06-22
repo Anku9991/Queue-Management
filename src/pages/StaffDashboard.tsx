@@ -102,7 +102,17 @@ const StaffDashboard = () => {
         </motion.div>
       )}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h1 className="text-3xl font-black text-slate-900 tracking-tight">Staff Area</h1>
+        <div>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Staff Area</h1>
+          <div className="flex space-x-3 mt-2">
+            <a href={`/tv/${hospital.id || 'H001'}`} target="_blank" rel="noreferrer" className="text-xs font-bold bg-primary-100 text-primary-700 px-3 py-1.5 rounded-lg hover:bg-primary-200 flex items-center transition-colors">
+              <Play className="w-3 h-3 mr-1" /> Open TV Display
+            </a>
+            <a href={`/poster/${hospital.id || 'H001'}`} target="_blank" rel="noreferrer" className="text-xs font-bold bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-lg hover:bg-emerald-200 flex items-center transition-colors">
+              <Building className="w-3 h-3 mr-1" /> Open QR Poster
+            </a>
+          </div>
+        </div>
         <div className="flex flex-wrap items-center gap-4 bg-white p-2 rounded-2xl shadow-sm border border-slate-200">
           
           {hospital.departments && hospital.departments.length > 0 && (
