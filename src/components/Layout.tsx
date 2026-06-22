@@ -1,16 +1,19 @@
 import { useEffect, useState } from 'react';
 import { Outlet, Link, useLocation, Navigate } from 'react-router-dom';
-import { Users, MonitorPlay, LogOut, Activity } from 'lucide-react';
+import { Users, LogOut, Activity, LayoutDashboard } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useQueueStore } from '../store/useQueueStore';
-import { auth, isFirebaseConfigured } from '../lib/firebase';
+import { auth, db, isFirebaseConfigured } from '../lib/firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import type { User } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import type { User as AuthUser } from 'firebase/auth';
+import type { User } from '../types';
 
 const Layout = () => {
   const location = useLocation();
-  const settings = useQueueStore(state => state.settings);
-  const [user, setUser] = useState<User | null>(null);
+  const { hospital, initListeners, setCurrentUser } = useQueueStore();
+  const [authUser, setAuthUser] = useState<AuthUser | null>(null);
+  const [dbUser, setDbUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -19,13 +22,31 @@ const Layout = () => {
       return;
     }
 
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      setAuthUser(currentUser);
+      if (currentUser && db) {
+        try {
+          const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+          if (userDoc.exists()) {
+            const userData = userDoc.data() as User;
+            setDbUser(userData);
+            setCurrentUser(userData);
+            if (userData.hospitalId && userData.role !== 'super_admin') {
+              initListeners(userData.hospitalId);
+            }
+          }
+        } catch (e) {
+          console.error("Error fetching user profile", e);
+        }
+      } else {
+        setDbUser(null);
+        setCurrentUser(null);
+      }
       setLoading(false);
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [initListeners, setCurrentUser]);
 
   const handleLogout = async () => {
     if (auth) await signOut(auth);
@@ -36,15 +57,23 @@ const Layout = () => {
   }
 
   // Protect routes if Firebase is configured
-  if (isFirebaseConfigured && !user) {
+  if (isFirebaseConfigured && !authUser) {
     return <Navigate to="/login" replace />;
   }
 
-  const navItems = [
-    { name: 'Staff Dashboard', path: '/staff', icon: Users },
-    { name: 'Admin Analytics', path: '/admin', icon: Activity },
-    { name: 'TV Display', path: '/tv', icon: MonitorPlay },
-  ];
+  const navItems = [];
+  
+  if (dbUser?.role === 'super_admin') {
+    navItems.push({ name: 'Global Dashboard', path: '/super-admin', icon: LayoutDashboard });
+  } else {
+    navItems.push({ name: 'Staff Dashboard', path: '/staff', icon: Users });
+    if (dbUser?.role === 'hospital_admin') {
+      navItems.push({ name: 'Admin Analytics', path: '/admin', icon: Activity });
+    }
+  }
+
+  const displayName = dbUser?.role === 'super_admin' ? 'PihNexa Super Admin' : (hospital?.hospitalName || 'Loading...');
+  const displayLogo = dbUser?.role === 'super_admin' ? '/logo.png' : (hospital?.logo || '/logo.png');
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
@@ -53,8 +82,8 @@ const Layout = () => {
           <div className="flex justify-between h-16">
             <div className="flex">
               <div className="flex-shrink-0 flex items-center">
-                <img src="/logo.png" alt="Logo" className="h-10 w-auto object-contain" />
-                <span className="ml-3 text-xl font-bold text-slate-900">{settings.hospitalName}</span>
+                <img src={displayLogo} alt="Logo" className="h-10 w-auto object-contain" />
+                <span className="ml-3 text-xl font-bold text-slate-900">{displayName}</span>
               </div>
               <nav className="hidden sm:ml-6 sm:flex sm:space-x-8">
                 {navItems.map((item) => {
@@ -78,7 +107,7 @@ const Layout = () => {
               </nav>
             </div>
             <div className="flex items-center space-x-4">
-              {isFirebaseConfigured && user && (
+              {isFirebaseConfigured && authUser && (
                 <button onClick={handleLogout} className="flex items-center text-sm font-medium text-slate-500 hover:text-slate-700">
                   <LogOut className="h-5 w-5 mr-1" />
                   Logout

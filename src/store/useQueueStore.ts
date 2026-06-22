@@ -1,35 +1,40 @@
 import { create } from 'zustand';
-import type { Token, QueueStatus, PriorityLevel, Settings } from '../types';
+import type { Token, Hospital, User } from '../types';
 import { db, isFirebaseConfigured } from '../lib/firebase';
 import { collection, doc, setDoc, updateDoc, onSnapshot, query, orderBy, where } from 'firebase/firestore';
 
 interface QueueState {
   tokens: Token[];
-  settings: Settings;
+  hospital: Hospital | null;
+  activeHospitalId: string | null;
+  currentUser: User | null;
   
   // Actions
-  initListeners: () => void;
-  generateToken: (patientInfo: Omit<Token, 'id' | 'tokenId' | 'status' | 'timestamp'>) => Promise<Token>;
-  updateStatus: (tokenId: string, status: QueueStatus, servedBy?: string) => Promise<void>;
-  updatePriority: (tokenId: string, priority: PriorityLevel) => Promise<void>;
-  callNext: (counterName: string) => Promise<Token | null>;
-  updateSettings: (newSettings: Partial<Settings>) => Promise<void>;
+  setHospitalId: (hospitalId: string) => void;
+  setCurrentUser: (user: User | null) => void;
+  initListeners: (hospitalId: string) => void;
+  generateToken: (hospitalId: string, patientInfo: Partial<Token>) => Promise<Token>;
+  updateStatus: (tokenId: string, status: Token['status'], servedBy?: string) => Promise<void>;
+  updatePriority: (tokenId: string, priority: Token['priority']) => Promise<void>;
+  callNext: (counterName: string, department?: string) => Promise<Token | null>;
+  updateHospital: (hospitalId: string, updates: Partial<Hospital>) => Promise<void>;
 }
 
 const generateId = () => Math.random().toString(36).substring(2, 9);
 
 export const useQueueStore = create<QueueState>((set, get) => ({
   tokens: [],
-  settings: {
-    hospitalName: 'Smart Queue Management',
-    prefix: 'A-',
-    resetTime: '00:00',
-    counters: ['Counter 1', 'Counter 2', 'Counter 3'],
-    staffList: []
-  },
+  hospital: null,
+  activeHospitalId: null,
+  currentUser: null,
 
-  initListeners: () => {
-    if (!isFirebaseConfigured || !db) return;
+  setHospitalId: (hospitalId) => set({ activeHospitalId: hospitalId }),
+  setCurrentUser: (user) => set({ currentUser: user }),
+
+  initListeners: (hospitalId) => {
+    if (!isFirebaseConfigured || !db || !hospitalId) return;
+
+    set({ activeHospitalId: hospitalId });
 
     // Listen to tokens (Only fetch today's tokens to avoid loading old data)
     const startOfDay = new Date();
@@ -37,40 +42,59 @@ export const useQueueStore = create<QueueState>((set, get) => ({
 
     const q = query(
       collection(db, 'tokens'), 
+      where('hospitalId', '==', hospitalId),
       where('timestamp', '>=', startOfDay.getTime()),
       orderBy('timestamp', 'asc')
     );
+    
     onSnapshot(q, (snapshot) => {
       const liveTokens: Token[] = [];
-      snapshot.forEach((doc) => liveTokens.push(doc.data() as Token));
+      snapshot.forEach((doc) => liveTokens.push({ id: doc.id, ...doc.data() } as Token));
       set({ tokens: liveTokens });
     });
 
-    // Listen to settings
-    onSnapshot(doc(db, 'settings', 'global'), (docSnap) => {
+    // Listen to hospital profile
+    onSnapshot(doc(db, 'hospitals', hospitalId), (docSnap) => {
       if (docSnap.exists()) {
-        set({ settings: docSnap.data() as Settings });
+        set({ hospital: { id: docSnap.id, ...docSnap.data() } as Hospital });
+      } else {
+        // Fallback for new unconfigured hospital
+        set({ hospital: null });
       }
     });
   },
 
-  generateToken: async (patientInfo) => {
-    const { tokens, settings } = get();
+  generateToken: async (hospitalId, patientInfo) => {
+    const { tokens, hospital } = get();
     const today = new Date().toDateString();
     const todayTokens = tokens.filter(t => new Date(t.timestamp).toDateString() === today);
     
     const nextNumber = todayTokens.length + 1;
     const formattedNumber = nextNumber.toString().padStart(3, '0');
-    const newTokenId = `${settings.prefix}${formattedNumber}`;
+    const prefix = patientInfo.department ? patientInfo.department.substring(0, 1).toUpperCase() : 'T';
+    const newTokenId = `${prefix}-${formattedNumber}`;
     const id = generateId();
+
+    // Smart Counter Assignment Logic
+    // Find all counters serving this department, find the one with the fewest waiting tokens
+    let estimatedWaitTimeMins = 0;
+
+    if (hospital && patientInfo.department) {
+       // In a real app, counters might explicitly state which departments they serve.
+       // For now, we find how many people are waiting ahead in this department.
+       const waitingAhead = todayTokens.filter(t => t.status === 'waiting' && t.department === patientInfo.department).length;
+       estimatedWaitTimeMins = waitingAhead * 5; // 5 mins avg per patient
+    }
 
     const newToken: Token = {
       ...patientInfo,
       id,
       tokenId: newTokenId,
+      hospitalId,
       status: 'waiting',
       timestamp: Date.now(),
-    };
+      estimatedWaitTimeMins,
+    } as Token;
 
     if (isFirebaseConfigured && db) {
       await setDoc(doc(db, 'tokens', id), newToken);
@@ -84,11 +108,13 @@ export const useQueueStore = create<QueueState>((set, get) => ({
   updateStatus: async (id, status, servedBy) => {
     const { tokens } = get();
     const token = tokens.find(t => t.id === id);
-    if (!token) return;
+    if (!token || !token.id) return;
 
     if (isFirebaseConfigured && db) {
       const updates: any = { status };
       if (servedBy) updates.servedBy = servedBy;
+      if (status === 'serving') updates.servedAt = Date.now();
+      if (status === 'completed') updates.completedAt = Date.now();
       await updateDoc(doc(db, 'tokens', token.id), updates);
     } else {
       set((state) => ({
@@ -104,7 +130,7 @@ export const useQueueStore = create<QueueState>((set, get) => ({
   updatePriority: async (id, priority) => {
     const { tokens } = get();
     const token = tokens.find(t => t.id === id);
-    if (!token) return;
+    if (!token || !token.id) return;
 
     if (isFirebaseConfigured && db) {
       await updateDoc(doc(db, 'tokens', token.id), { priority });
@@ -115,14 +141,15 @@ export const useQueueStore = create<QueueState>((set, get) => ({
     }
   },
 
-  callNext: async (counterName) => {
+  callNext: async (counterName, department) => {
     const { tokens, updateStatus } = get();
     
-    const priorityWeight: Record<PriorityLevel, number> = {
-      vip: 5, emergency: 4, pregnant: 3, senior: 2, disabled: 1, normal: 0
+    const priorityWeight: Record<string, number> = {
+      disabled: 5, pregnant: 4, senior: 3, emergency: 2, normal: 0
     };
 
-    const waitingTokens = tokens.filter(t => t.status === 'waiting')
+    const waitingTokens = tokens
+      .filter(t => t.status === 'waiting' && (!department || t.department === department))
       .sort((a, b) => {
         if (priorityWeight[a.priority] !== priorityWeight[b.priority]) {
           return priorityWeight[b.priority] - priorityWeight[a.priority];
@@ -133,15 +160,15 @@ export const useQueueStore = create<QueueState>((set, get) => ({
     if (waitingTokens.length === 0) return null;
 
     const nextToken = waitingTokens[0];
-    await updateStatus(nextToken.id, 'in-process', counterName);
+    await updateStatus(nextToken.id!, 'serving', counterName);
     return nextToken;
   },
 
-  updateSettings: async (newSettings) => {
+  updateHospital: async (hospitalId, updates) => {
     if (isFirebaseConfigured && db) {
-      await setDoc(doc(db, 'settings', 'global'), newSettings, { merge: true });
+      await updateDoc(doc(db, 'hospitals', hospitalId), updates as any);
     } else {
-      set((state) => ({ settings: { ...state.settings, ...newSettings } }));
+      set((state) => ({ hospital: { ...state.hospital!, ...updates } as Hospital }));
     }
   }
 }));

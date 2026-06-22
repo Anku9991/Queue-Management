@@ -1,13 +1,15 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, User, Phone, FileText } from 'lucide-react';
+import { ArrowRight, User, Phone, Building } from 'lucide-react';
 import { useQueueStore } from '../store/useQueueStore';
 
 const PatientLanding = () => {
+  const { hospitalId } = useParams<{ hospitalId: string }>();
   const navigate = useNavigate();
   const generateToken = useQueueStore(state => state.generateToken);
-  const settings = useQueueStore(state => state.settings);
+  const hospital = useQueueStore(state => state.hospital);
+  const initListeners = useQueueStore(state => state.initListeners);
   
   const [formData, setFormData] = useState({
     patientName: '',
@@ -15,26 +17,44 @@ const PatientLanding = () => {
     age: '',
     gender: 'Male',
     purpose: '',
-    uhid: '',
+    department: '',
     priority: 'normal' as const
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  useEffect(() => {
+    if (hospitalId) {
+      initListeners(hospitalId);
+    }
+  }, [hospitalId, initListeners]);
+
+  // Set default department when hospital loads
+  useEffect(() => {
+    if (hospital?.departments && hospital.departments.length > 0 && !formData.department) {
+      setFormData(prev => ({ ...prev, department: hospital.departments[0] }));
+    }
+  }, [hospital, formData.department]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!hospitalId) return;
     setIsSubmitting(true);
     try {
-      const newToken = await generateToken({
+      const newToken = await generateToken(hospitalId, {
         ...formData,
         priority: formData.priority,
       });
-      navigate(`/tracker/${newToken.tokenId}`);
+      navigate(`/tracker/${hospitalId}/${newToken.tokenId}`);
     } catch (error) {
       console.error(error);
       setIsSubmitting(false);
     }
   };
+
+  if (!hospital) {
+    return <div className="min-h-screen flex items-center justify-center bg-slate-50"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div></div>;
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]">
@@ -45,7 +65,7 @@ const PatientLanding = () => {
           className="flex justify-center"
         >
           <div className="h-24 w-auto flex items-center justify-center mb-4">
-            <img src="/logo.png" alt="Smart Queue Logo" className="h-full w-auto object-contain drop-shadow-md" />
+            <img src={hospital.logo || "/logo.png"} alt="Hospital Logo" className="h-full w-auto object-contain drop-shadow-md" />
           </div>
         </motion.div>
         <motion.h2 
@@ -54,7 +74,7 @@ const PatientLanding = () => {
           transition={{ delay: 0.1 }}
           className="mt-6 text-center text-3xl font-extrabold text-slate-900"
         >
-          {settings.hospitalName}
+          {hospital.hospitalName}
         </motion.h2>
         <motion.p 
           initial={{ y: -20, opacity: 0 }}
@@ -116,6 +136,30 @@ const PatientLanding = () => {
               </div>
             </div>
 
+            {hospital.departments && hospital.departments.length > 0 && (
+              <div>
+                <label htmlFor="department" className="block text-sm font-medium text-slate-700">
+                  Select Department
+                </label>
+                <div className="mt-1 relative rounded-md shadow-sm">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Building className="h-5 w-5 text-slate-400" />
+                  </div>
+                  <select
+                    id="department"
+                    required
+                    value={formData.department}
+                    onChange={(e) => setFormData({...formData, department: e.target.value})}
+                    className="focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 sm:text-sm border-slate-300 rounded-xl py-3 border"
+                  >
+                    {hospital.departments.map(dept => (
+                      <option key={dept} value={dept}>{dept}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label htmlFor="age" className="block text-sm font-medium text-slate-700">Age</label>
@@ -140,26 +184,6 @@ const PatientLanding = () => {
                   <option>Female</option>
                   <option>Other</option>
                 </select>
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="purpose" className="block text-sm font-medium text-slate-700">
-                Purpose of Visit
-              </label>
-              <div className="mt-1 relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FileText className="h-5 w-5 text-slate-400" />
-                </div>
-                <input
-                  id="purpose"
-                  type="text"
-                  required
-                  value={formData.purpose}
-                  onChange={(e) => setFormData({...formData, purpose: e.target.value})}
-                  className="focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 sm:text-sm border-slate-300 rounded-xl py-3 border"
-                  placeholder="Consultation, Follow up, etc."
-                />
               </div>
             </div>
 

@@ -1,9 +1,22 @@
+import { useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { useQueueStore } from '../store/useQueueStore';
+
 const QRPoster = () => {
-  const { settings } = useQueueStore();
+  const { hospitalId } = useParams<{ hospitalId: string }>();
+  const { hospital, initListeners } = useQueueStore();
+  
+  useEffect(() => {
+    if (hospitalId) initListeners(hospitalId);
+  }, [hospitalId, initListeners]);
+
   // Get the current origin (e.g., http://localhost:5173 or the deployed domain)
-  const patientPortalUrl = window.location.origin + '/';
+  const patientPortalUrl = window.location.origin + `/register/${hospitalId || ''}`;
+
+  if (!hospital) {
+    return <div className="min-h-screen bg-slate-50 flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div></div>;
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-8 print:p-0 print:bg-white">
@@ -15,11 +28,11 @@ const QRPoster = () => {
           
           <div className="flex justify-center mb-6 relative z-10">
             <div className="h-32 bg-white rounded-2xl shadow-lg flex items-center justify-center border-4 border-[#8CC63F] p-4 mb-4">
-              <img src="/logo.png" alt="Logo" className="h-full w-auto object-contain" />
+              <img src={hospital.logo || "/logo.png"} alt="Logo" className="h-full w-auto object-contain" />
             </div>
           </div>
           <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight relative z-10 text-white">
-            {settings.hospitalName}
+            {hospital.hospitalName}
           </h1>
           <p className="mt-4 text-xl sm:text-2xl text-blue-100 font-medium relative z-10">
             Scan to get your Queue Token

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQueueStore } from '../store/useQueueStore';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Users, Clock, CheckCircle, SkipForward, Trash2, Plus } from 'lucide-react';
+import { Users, Clock, CheckCircle, SkipForward } from 'lucide-react';
 import { format } from 'date-fns';
 
 const StatCard = ({ title, value, icon: Icon, colorClass, gradient }: any) => (
@@ -18,16 +18,17 @@ const StatCard = ({ title, value, icon: Icon, colorClass, gradient }: any) => (
 );
 
 const AdminDashboard = () => {
-  const { tokens, settings, updateSettings } = useQueueStore();
+  const { tokens, hospital, currentUser, updateHospital } = useQueueStore();
   const [activeTab, setActiveTab] = useState('overview');
 
   // Settings State
-  const [localSettings, setLocalSettings] = useState(settings);
-  const [newStaff, setNewStaff] = useState({ name: '', role: '', email: '' });
+  const [localSettings, setLocalSettings] = useState<any>(hospital || {});
 
   useEffect(() => {
-    setLocalSettings(settings);
-  }, [settings]);
+    if (hospital) {
+      setLocalSettings(hospital);
+    }
+  }, [hospital]);
 
   const today = new Date().toDateString();
   const todayTokens = tokens.filter(t => new Date(t.timestamp).toDateString() === today);
@@ -47,11 +48,12 @@ const AdminDashboard = () => {
   ];
 
   const handleExportCSV = () => {
-    const headers = ['Token ID', 'Patient Name', 'Mobile', 'Status', 'Priority', 'Generated At'];
+    const headers = ['Token ID', 'Patient Name', 'Mobile', 'Department', 'Status', 'Priority', 'Generated At'];
     const rows = tokens.map(t => [
       t.tokenId,
       t.patientName,
       t.mobile,
+      t.department || '',
       t.status,
       t.priority,
       format(t.timestamp, 'yyyy-MM-dd HH:mm:ss')
@@ -78,9 +80,18 @@ const AdminDashboard = () => {
   };
 
   const handleSaveSettings = async () => {
-    await updateSettings(localSettings);
-    alert('Settings saved successfully!');
+    if (!currentUser?.hospitalId) return;
+    try {
+      await updateHospital(currentUser.hospitalId, localSettings);
+      alert('Settings saved successfully!');
+    } catch (e: any) {
+      alert(e.message || 'Failed to save settings');
+    }
   };
+
+  if (!hospital) {
+    return <div className="text-center py-12">Loading Admin Context...</div>;
+  }
 
   return (
     <div className="space-y-8">
@@ -105,10 +116,10 @@ const AdminDashboard = () => {
 
       <div className="bg-white shadow-sm rounded-2xl border border-slate-200 overflow-hidden print:hidden">
         <div className="border-b border-slate-200">
-          <nav className="flex -mb-px px-6">
+          <nav className="flex -mb-px px-6 overflow-x-auto">
             <button
               onClick={() => setActiveTab('overview')}
-              className={`py-4 px-6 text-sm font-medium border-b-2 ${
+              className={`py-4 px-6 text-sm font-medium border-b-2 whitespace-nowrap ${
                 activeTab === 'overview'
                   ? 'border-primary-500 text-primary-600'
                   : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
@@ -118,23 +129,13 @@ const AdminDashboard = () => {
             </button>
             <button
               onClick={() => setActiveTab('settings')}
-              className={`py-4 px-6 text-sm font-medium border-b-2 ${
+              className={`py-4 px-6 text-sm font-medium border-b-2 whitespace-nowrap ${
                 activeTab === 'settings'
                   ? 'border-primary-500 text-primary-600'
                   : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
               }`}
             >
-              System Settings
-            </button>
-            <button
-              onClick={() => setActiveTab('staff')}
-              className={`py-4 px-6 text-sm font-medium border-b-2 ${
-                activeTab === 'staff'
-                  ? 'border-primary-500 text-primary-600'
-                  : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
-              }`}
-            >
-              Staff Directory
+              Hospital Settings
             </button>
           </nav>
         </div>
@@ -161,14 +162,14 @@ const AdminDashboard = () => {
             <div className="space-y-6 max-w-2xl">
               <div>
                 <h3 className="text-lg font-medium text-slate-900">Hospital Details</h3>
-                <p className="mt-1 text-sm text-slate-500">Update your hospital branding and settings.</p>
+                <p className="mt-1 text-sm text-slate-500">Update your hospital branding and configuration.</p>
               </div>
               <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
                 <div className="sm:col-span-6">
                   <label className="block text-sm font-medium text-slate-700">Hospital Name</label>
                   <input 
                     type="text" 
-                    value={localSettings.hospitalName} 
+                    value={localSettings.hospitalName || ''} 
                     onChange={e => setLocalSettings({...localSettings, hospitalName: e.target.value})}
                     className="mt-1 block w-full border border-slate-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm" 
                   />
@@ -177,7 +178,7 @@ const AdminDashboard = () => {
                   <label className="block text-sm font-medium text-slate-700">Token Prefix</label>
                   <input 
                     type="text" 
-                    value={localSettings.prefix} 
+                    value={localSettings.prefix || ''} 
                     onChange={e => setLocalSettings({...localSettings, prefix: e.target.value})}
                     className="mt-1 block w-full border border-slate-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm" 
                   />
@@ -186,10 +187,20 @@ const AdminDashboard = () => {
                   <label className="block text-sm font-medium text-slate-700">Reset Time</label>
                   <input 
                     type="time" 
-                    value={localSettings.resetTime} 
+                    value={localSettings.resetTime || ''} 
                     onChange={e => setLocalSettings({...localSettings, resetTime: e.target.value})}
                     className="mt-1 block w-full border border-slate-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm" 
                   />
+                </div>
+                <div className="sm:col-span-6">
+                  <label className="block text-sm font-medium text-slate-700">Departments (Comma Separated)</label>
+                  <input 
+                    type="text" 
+                    value={localSettings.departments?.join(', ') || ''} 
+                    onChange={e => setLocalSettings({...localSettings, departments: e.target.value.split(',').map(s => s.trim()).filter(Boolean)})}
+                    className="mt-1 block w-full border border-slate-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm" 
+                  />
+                  <p className="mt-1 text-xs text-slate-500">Example: General OPD, Dental, Pediatrics</p>
                 </div>
                 <div className="sm:col-span-6">
                   <label className="block text-sm font-medium text-slate-700">Active Counters (Comma Separated)</label>
@@ -205,95 +216,6 @@ const AdminDashboard = () => {
               <div className="flex justify-end">
                 <button onClick={handleSaveSettings} className="bg-primary-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-primary-700 shadow-sm transition-colors">
                   Save Changes
-                </button>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'staff' && (
-            <div className="space-y-8">
-              <div>
-                <h3 className="text-lg font-medium text-slate-900">Staff Management</h3>
-                <p className="mt-1 text-sm text-slate-500">Manage hospital staff records and roles.</p>
-              </div>
-
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col sm:flex-row gap-4">
-                <input
-                  type="text"
-                  placeholder="Staff Name"
-                  value={newStaff.name}
-                  onChange={e => setNewStaff({...newStaff, name: e.target.value})}
-                  className="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm"
-                />
-                <input
-                  type="text"
-                  placeholder="Role (e.g. Doctor, Receptionist)"
-                  value={newStaff.role}
-                  onChange={e => setNewStaff({...newStaff, role: e.target.value})}
-                  className="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm"
-                />
-                <input
-                  type="email"
-                  placeholder="Email"
-                  value={newStaff.email}
-                  onChange={e => setNewStaff({...newStaff, email: e.target.value})}
-                  className="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm"
-                />
-                <button
-                  onClick={() => {
-                    if (!newStaff.name) return;
-                    const updatedStaff = [...(localSettings.staffList || []), { ...newStaff, id: Date.now().toString() }];
-                    setLocalSettings({...localSettings, staffList: updatedStaff});
-                    setNewStaff({ name: '', role: '', email: '' });
-                  }}
-                  className="bg-primary-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center justify-center hover:bg-primary-700"
-                >
-                  <Plus className="w-4 h-4 mr-1" /> Add Staff
-                </button>
-              </div>
-
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-slate-200">
-                  <thead className="bg-slate-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Name</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Role</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Email</th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-slate-200">
-                    {(localSettings.staffList || []).map((staff: any) => (
-                      <tr key={staff.id}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">{staff.name}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{staff.role}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{staff.email}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <button
-                            onClick={() => {
-                              const updatedStaff = localSettings.staffList.filter((s: any) => s.id !== staff.id);
-                              setLocalSettings({...localSettings, staffList: updatedStaff});
-                            }}
-                            className="text-red-600 hover:text-red-900"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                    {(!localSettings.staffList || localSettings.staffList.length === 0) && (
-                      <tr>
-                        <td colSpan={4} className="px-6 py-8 text-center text-slate-500 text-sm">
-                          No staff members added yet.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-              <div className="flex justify-end pt-4">
-                <button onClick={handleSaveSettings} className="bg-primary-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-primary-700 shadow-sm transition-colors">
-                  Save Directory
                 </button>
               </div>
             </div>

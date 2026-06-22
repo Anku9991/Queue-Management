@@ -1,0 +1,51 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to get the current user's profile
+    function getUser() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    
+    // Helper to check if user is super admin
+    function isSuperAdmin() {
+      return request.auth != null && getUser().role == 'super_admin';
+    }
+
+    // Helper to check if user belongs to the requested hospital
+    function isHospitalAdmin(hospitalId) {
+      return request.auth != null && getUser().hospitalId == hospitalId && getUser().role == 'hospital_admin';
+    }
+    
+    function isHospitalStaff(hospitalId) {
+      return request.auth != null && getUser().hospitalId == hospitalId;
+    }
+
+    // HOSPITALS COLLECTION
+    match /hospitals/{hospitalId} {
+      allow read: if true; // Public for QR page and loading settings
+      allow create, delete: if isSuperAdmin();
+      allow update: if isSuperAdmin() || isHospitalAdmin(hospitalId);
+    }
+
+    // USERS COLLECTION
+    match /users/{userId} {
+      // Users can read their own profile, or admins can read users in their hospital
+      allow read: if request.auth.uid == userId || isSuperAdmin() || isHospitalAdmin(resource.data.hospitalId);
+      // Only Super Admin or Hospital Admin can create/update users
+      allow write: if isSuperAdmin() || isHospitalAdmin(request.resource.data.hospitalId);
+    }
+
+    // TOKENS COLLECTION
+    match /tokens/{tokenId} {
+      // Anyone can create a token (patients registering) as long as it has a hospitalId
+      allow create: if request.resource.data.hospitalId != null;
+      
+      // Anyone can read a token (necessary for TV Display and Patient Tracker)
+      allow read: if true; 
+      
+      // Only hospital staff can update/delete tokens belonging to their hospital
+      allow update, delete: if isHospitalStaff(resource.data.hospitalId);
+    }
+  }
+}
