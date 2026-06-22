@@ -42,14 +42,32 @@ const Layout = () => {
               initListeners(userData.hospitalId);
             }
           } else {
-            // New user created via Auth but no Firestore doc yet
+            // New user created via Auth but no Firestore doc by UID yet
+            // Check if Super Admin pre-registered them by email
+            let finalRole = 'super_admin';
+            let finalHospitalId = 'H001';
+            
+            if (currentUser.email) {
+              try {
+                const emailDoc = await getDoc(doc(db, 'users', currentUser.email.toLowerCase()));
+                if (emailDoc.exists()) {
+                  const emailData = emailDoc.data();
+                  finalRole = emailData.role || 'hospital_admin';
+                  finalHospitalId = emailData.hospitalId || 'H001';
+                }
+              } catch (e) {
+                console.error("Could not fetch pre-registered email doc", e);
+              }
+            }
+
             const defaultUser: User = {
               uid: currentUser.uid,
               name: currentUser.displayName || 'User',
               email: currentUser.email || '',
-              role: 'super_admin', // Make the first unknown user a super admin to let them set up the system
-              hospitalId: 'H001'
+              role: finalRole as any,
+              hospitalId: finalHospitalId
             };
+
             try {
               await setDoc(doc(db, 'users', currentUser.uid), defaultUser);
             } catch (err) {
@@ -57,7 +75,7 @@ const Layout = () => {
             }
             setDbUser(defaultUser);
             setCurrentUser(defaultUser);
-            initListeners('H001');
+            initListeners(finalHospitalId);
           }
         } catch (e) {
           console.error("Error fetching user profile (Check Firestore Rules!):", e);
