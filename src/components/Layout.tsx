@@ -38,7 +38,7 @@ const Layout = () => {
 
             setDbUser(userData);
             setCurrentUser(userData);
-            if (userData.hospitalId && userData.role !== 'super_admin') {
+            if (userData.hospitalId) {
               initListeners(userData.hospitalId);
             }
           } else {
@@ -52,6 +52,7 @@ const Layout = () => {
             };
             setDbUser(defaultUser);
             setCurrentUser(defaultUser);
+            initListeners('H001');
           }
         } catch (e) {
           console.error("Error fetching user profile (Check Firestore Rules!):", e);
@@ -60,7 +61,7 @@ const Layout = () => {
             uid: currentUser.uid,
             name: currentUser.displayName || 'Fallback User',
             email: currentUser.email || '',
-            role: 'hospital_admin', // Give admin access so they aren't stuck
+            role: 'super_admin', // Give super_admin access so they aren't stuck
             hospitalId: 'H001'
           };
           setDbUser(fallbackUser);
@@ -97,13 +98,12 @@ const Layout = () => {
     navItems.push({ name: 'Admin Analytics', path: '/admin', icon: Activity });
     navItems.push({ name: 'Global Dashboard', path: '/super-admin', icon: LayoutDashboard });
   } else {
+    navItems.push({ name: 'Staff Dashboard', path: '/staff', icon: Users });
+    if (dbUser?.role === 'hospital_admin' || dbUser?.role === 'super_admin') {
+      navItems.push({ name: 'Admin Analytics', path: '/admin', icon: Activity });
+    }
     if (dbUser?.role === 'super_admin') {
       navItems.push({ name: 'Global Dashboard', path: '/super-admin', icon: LayoutDashboard });
-    } else {
-      navItems.push({ name: 'Staff Dashboard', path: '/staff', icon: Users });
-      if (dbUser?.role === 'hospital_admin') {
-        navItems.push({ name: 'Admin Analytics', path: '/admin', icon: Activity });
-      }
     }
   }
 
