@@ -77,8 +77,8 @@ export const useQueueStore = create<QueueState>((set, get) => ({
       if (docSnap.exists()) {
         set({ hospital: { id: docSnap.id, ...docSnap.data() } as Hospital });
       } else {
-        // Fallback for new unconfigured hospital
-        set({ hospital: null });
+        // Fallback for new unconfigured hospital / legacy migration
+        set({ hospital: { ...MOCK_HOSPITAL, id: hospitalId } });
       }
     });
   },

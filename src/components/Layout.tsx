@@ -29,11 +29,26 @@ const Layout = () => {
           const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
           if (userDoc.exists()) {
             const userData = userDoc.data() as User;
+            // Legacy data migration: automatically assign H001 to existing users
+            if (!userData.hospitalId) userData.hospitalId = 'H001';
+            if (!userData.role) userData.role = 'hospital_admin';
+
             setDbUser(userData);
             setCurrentUser(userData);
             if (userData.hospitalId && userData.role !== 'super_admin') {
               initListeners(userData.hospitalId);
             }
+          } else {
+            // New user created via Auth but no Firestore doc yet
+            const defaultUser: User = {
+              uid: currentUser.uid,
+              name: currentUser.displayName || 'User',
+              email: currentUser.email || '',
+              role: 'super_admin', // Make the first unknown user a super admin to let them set up the system
+              hospitalId: 'H001'
+            };
+            setDbUser(defaultUser);
+            setCurrentUser(defaultUser);
           }
         } catch (e) {
           console.error("Error fetching user profile", e);
