@@ -69,9 +69,9 @@ const TVDisplay = () => {
       {/* Header */}
       <header className="bg-slate-900/50 backdrop-blur-xl border-b border-white/10 px-8 py-6 flex justify-between items-center relative z-10">
         <div className="flex items-center">
-          {hospital.logo && <img src={hospital.logo} alt="Logo" className="h-12 w-auto mr-4" />}
+          {hospital.logo && <img src={hospital.logo} alt="Logo" className="h-12 w-auto mr-4 object-contain" />}
           <div>
-            <h1 className="text-3xl font-black text-white tracking-tight">{hospital.hospitalName}</h1>
+            <h1 className="text-3xl font-black text-white tracking-tight">{hospital.hospitalName?.trim() ? hospital.hospitalName : 'Our Premium Clinic'}</h1>
             <p className="text-primary-400 font-medium">Live Queue Status</p>
           </div>
         </div>

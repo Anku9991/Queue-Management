@@ -41,7 +41,7 @@ const QRPoster = () => {
           <h1 className="text-6xl font-black tracking-tight mb-4 leading-tight">
             Welcome to <br/>
             <span className="text-emerald-400 drop-shadow-[0_0_15px_rgba(52,211,153,0.5)]">
-              {hospital.hospitalName || 'Our Premium Clinic'}
+              {hospital.hospitalName?.trim() ? hospital.hospitalName : 'Our Premium Clinic'}
             </span>
           </h1>
           

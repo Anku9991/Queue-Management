@@ -132,7 +132,7 @@ const PatientTracker = () => {
       <div className="w-full max-w-md relative z-10 mt-6">
         
         <div className="text-center mb-6 text-white">
-          <h1 className="text-xl font-bold tracking-tight">{hospital.hospitalName}</h1>
+          <h1 className="text-xl font-bold tracking-tight">{hospital.hospitalName?.trim() ? hospital.hospitalName : 'Our Premium Clinic'}</h1>
           <p className="text-primary-200 text-sm font-medium flex items-center justify-center mt-1">
             <Activity className="w-4 h-4 mr-1 animate-pulse" /> Live Tracking Active
           </p>

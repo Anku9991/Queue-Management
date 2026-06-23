@@ -130,7 +130,7 @@ const Layout = () => {
     }
   }
 
-  const displayName = dbUser?.role === 'super_admin' ? 'PihNexa Super Admin' : (hospital?.hospitalName || 'Loading...');
+  const displayName = dbUser?.role === 'super_admin' ? 'PihNexa Super Admin' : (hospital?.hospitalName?.trim() ? hospital.hospitalName : 'Loading...');
   const displayLogo = dbUser?.role === 'super_admin' ? '/logo.png' : (hospital?.logo || '/logo.png');
 
   return (
