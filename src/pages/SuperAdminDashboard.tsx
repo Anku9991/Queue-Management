@@ -5,6 +5,9 @@ import { Hospital, Building, Shield, Trash2, ArrowRightCircle } from 'lucide-rea
 import toast from 'react-hot-toast';
 import { useQueueStore } from '../store/useQueueStore';
 import { useNavigate } from 'react-router-dom';
+import { firebaseConfig } from '../lib/firebase';
+import { initializeApp } from 'firebase/app';
+import { getAuth, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 
 const SuperAdminDashboard = () => {
   const [hospitals, setHospitals] = useState<any[]>([]);
@@ -18,6 +21,7 @@ const SuperAdminDashboard = () => {
   const [hospitalName, setHospitalName] = useState('');
   const [prefix, setPrefix] = useState('');
   const [adminEmail, setAdminEmail] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
 
   const fetchHospitals = async () => {
     try {
@@ -58,19 +62,34 @@ const SuperAdminDashboard = () => {
       if (!db) throw new Error("Firebase not initialized");
       await setDoc(doc(db, 'hospitals', hospitalId), newHospital);
 
-      // 2. Assign Admin User Role in Users Collection
-      if (adminEmail && db) {
-        await setDoc(doc(db, 'users', adminEmail.toLowerCase()), {
-          email: adminEmail.toLowerCase(),
-          role: 'hospital_admin',
-          hospitalId: hospitalId
-        });
+      // 2. Create Auth User using Secondary Firebase App (so Super Admin doesn't get logged out)
+      if (adminEmail && adminPassword && db) {
+        try {
+          const secondaryApp = initializeApp(firebaseConfig, "SecondaryApp" + Date.now());
+          const secondaryAuth = getAuth(secondaryApp);
+          
+          // Create the user in Firebase Auth
+          await createUserWithEmailAndPassword(secondaryAuth, adminEmail.toLowerCase(), adminPassword);
+          await signOut(secondaryAuth); // Sign out of the secondary app immediately
+
+          // 3. Assign Admin User Role in Users Collection
+          await setDoc(doc(db, 'users', adminEmail.toLowerCase()), {
+            email: adminEmail.toLowerCase(),
+            role: 'hospital_admin',
+            hospitalId: hospitalId
+          });
+        } catch (authErr: any) {
+          console.error("Auth creation error:", authErr);
+          toast.error("Hospital created, but failed to create Auth User: " + authErr.message);
+          return;
+        }
       }
 
       toast.success('Hospital & Admin Created Successfully!');
       setHospitalName('');
       setPrefix('');
       setAdminEmail('');
+      setAdminPassword('');
       fetchHospitals();
     } catch (err: any) {
       console.error(err);
@@ -143,7 +162,7 @@ const SuperAdminDashboard = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Admin Email (Google Login)</label>
+                <label className="block text-sm font-bold text-slate-700 mb-1">Admin Email</label>
                 <input
                   type="email"
                   required
@@ -151,6 +170,18 @@ const SuperAdminDashboard = () => {
                   onChange={e => setAdminEmail(e.target.value)}
                   className="w-full border-slate-200 bg-slate-50 rounded-xl font-medium focus:ring-primary-500 focus:border-primary-500"
                   placeholder="admin@apollo.com"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1">Admin Password</label>
+                <input
+                  type="password"
+                  required
+                  minLength={6}
+                  value={adminPassword}
+                  onChange={e => setAdminPassword(e.target.value)}
+                  className="w-full border-slate-200 bg-slate-50 rounded-xl font-medium focus:ring-primary-500 focus:border-primary-500"
+                  placeholder="Minimum 6 characters"
                 />
               </div>
               <button
