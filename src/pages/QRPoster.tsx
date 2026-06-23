@@ -32,22 +32,28 @@ const QRPoster = () => {
         
         {/* Left Side: Branding & Instructions */}
         <div className="flex-[1.5] text-white flex flex-col justify-center pr-8">
-          {hospital.logo && <img src={hospital.logo} alt="Logo" className="h-20 w-auto mb-8" />}
+          {hospital.logo && (
+            <div className="bg-white/10 p-4 rounded-3xl backdrop-blur-md inline-block self-start mb-8 border border-white/20 shadow-xl">
+              <img src={hospital.logo} alt="Logo" className="h-24 w-auto object-contain" />
+            </div>
+          )}
           
           <h1 className="text-6xl font-black tracking-tight mb-4 leading-tight">
             Welcome to <br/>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-indigo-400">
-              {hospital.hospitalName}
+            <span className="text-emerald-400 drop-shadow-[0_0_15px_rgba(52,211,153,0.5)]">
+              {hospital.hospitalName || 'Our Premium Clinic'}
             </span>
           </h1>
           
-          <div className="flex items-center mb-12 bg-white/5 inline-flex p-3 pr-5 rounded-full border border-white/10 self-start backdrop-blur-md">
-            <span className="text-slate-400 text-sm font-bold mr-3 uppercase tracking-widest">Powered By</span>
-            <img src="/logo.png" alt="PihNexa Logo" className="h-6 w-auto" />
-            <span className="text-white font-bold ml-2 text-lg">PihNexa Technologies</span>
+          <div className="flex items-center mb-10 bg-gradient-to-r from-slate-800 to-slate-900 inline-flex p-2 pr-6 rounded-full border border-slate-700 shadow-lg self-start">
+            <div className="bg-black/50 px-3 py-1.5 rounded-full mr-4 border border-slate-700">
+              <span className="text-slate-400 text-xs font-black uppercase tracking-[0.2em]">Powered By</span>
+            </div>
+            <img src="/logo.png" alt="PihNexa Logo" className="h-7 w-auto object-contain filter drop-shadow-md" />
+            <span className="text-white font-black ml-3 text-lg tracking-wide">PihNexa<span className="text-primary-400 font-medium"> Technologies</span></span>
           </div>
           
-          <p className="text-2xl text-slate-300 font-medium mb-12">
+          <p className="text-2xl text-slate-300 font-medium mb-12 leading-relaxed">
             Scan the QR code to join the queue and track your live status. No more waiting in lines!
           </p>
 
